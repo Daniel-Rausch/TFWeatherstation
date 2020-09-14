@@ -1,6 +1,12 @@
 settings = {
     "UIDs" : {
         "LCD20x4" : "vBF",
-        "Temperature" : "tab"
+        "OLED128x64" : "yfN",
+        "Joystick" : "wa5",
+        "RTC" : "xKm",
+        "Temperature" : "tab",
+        "Humidity" : "xtp",
+        "Light2.0" : "uLj",
+        "Barometer" : "vLp",
     }
 }
