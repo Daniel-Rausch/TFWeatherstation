@@ -8,5 +8,7 @@ settings = {
         "Humidity" : "xtp",
         "Light2.0" : "uLj",
         "Barometer" : "vLp",
-    }
+    },
+
+    "LoggingLevel" : "INFO",
 }
