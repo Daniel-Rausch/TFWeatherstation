@@ -5,7 +5,6 @@ UID = "vBF" # Change XYZ to the UID of your LCD 20x4 Bricklet
 
 from tinkerforge.ip_connection import IPConnection
 from tinkerforge.bricklet_lcd_20x4 import BrickletLCD20x4
-from tinkerforge.bricklet_real_time_clock import BrickletRealTimeClock
 
 import logging
 import time
@@ -13,25 +12,27 @@ import time
 
 from settings import settings
 from bricklets.temperature import Temperature
+from bricklets.clock import Clock
 
 
 
 class Controller:
 
-    __globalController = ""
-
-    @staticmethod
-    def getData():
-        return Controller.__globalController.__data
-    
+    mainController = ""    
 
 
     def __init__(self):
-        if not Controller.__globalController == "":
+        self.bricklets = {}
+        self.ipcon = ""
+
+        #Ensure that there is ever only a single controller instance
+        if not Controller.mainController == "":
             logging.error("Controller already instantiated. Aborted second instantiation.")
+            return
         else:
-            Controller.__globalController = self
-        self.__data = {}
+            self.mainController = self
+
+        print(self.mainController)
 
         #Prepare Logging
         logginglevels = {
@@ -44,19 +45,19 @@ class Controller:
         logging.basicConfig(level=logginglevels.get(settings["LoggingLevel"], logging.WARNING), format = "LOGGING:%(levelname)s   %(message)s")
 
         #Create all bricklet classes and store them
-        self.__ipcon = IPConnection()
-        self.__data["bricklets"] = {}
+        self.ipcon = IPConnection()
 
-        self.__data["bricklets"]["temperature"] = Temperature(self.__ipcon)
+        self.bricklets["temperature"] = Temperature(self)
+        self.bricklets["clock"] = Clock(self)
 
-        self.__ipcon.connect(HOST, PORT)
+        self.ipcon.connect(HOST, PORT)
 
 
 
     def startStation(self):
 
-        for i in range(0,50):
-            temperature = str(self.__data["bricklets"]["temperature"].getTemperature()/100)
+        for i in range(0,5):
+            temperature = str(self.bricklets["temperature"].getTemperature()/100)
             print("Temp: " + temperature + " °C")
 
             time.sleep(0.1)
@@ -67,9 +68,9 @@ class Controller:
 
 
     def __shutdownStation(self):
-        for bricklet in self.__data["bricklets"].values():
+        for bricklet in self.bricklets.values():
             bricklet.shutdown()
-        self.__ipcon.disconnect()
+        self.ipcon.disconnect()
 
 
 

@@ -1,8 +1,8 @@
 import logging
 
-
 class Bricklet():
-    def __init__(self):
+    def __init__(self, controller):
+        self._controller = controller
         logging.info("Initializing: "+ type(self).__name__)
 
 

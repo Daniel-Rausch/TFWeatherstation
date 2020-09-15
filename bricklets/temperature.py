@@ -6,9 +6,9 @@ from bricklets.bricklet import Bricklet
 
 class Temperature(Bricklet):
 
-    def __init__(self, ipcon):
-        super().__init__()
-        self.__temperature = BrickletTemperature(settings["UIDs"]["Temperature"], ipcon)
+    def __init__(self, controller):
+        super().__init__(controller)
+        self.__temperature = BrickletTemperature(settings["UIDs"]["Temperature"], self._controller.ipcon)
 
     def getTemperature(self):
         return self.__temperature.get_temperature()
