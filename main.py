@@ -14,6 +14,7 @@ from settings import settings
 from bricklets.temperature import Temperature
 from bricklets.clock import Clock
 from bricklets.lcd20x4 import LCD20x4
+from bricklets.joystick import Joystick
 
 from screens.datascreen import DataScreen
 
@@ -28,6 +29,7 @@ class Controller:
         self.bricklets = {}
         self.ipcon = ""
         self.currentScreen = ""
+        self.currentTick = 0
         self.shutdown = False
 
         #Ensure that there is ever only a single controller instance
@@ -36,8 +38,6 @@ class Controller:
             return
         else:
             self.mainController = self
-
-        print(self.mainController)
 
         #Prepare Logging
         logginglevels = {
@@ -56,6 +56,7 @@ class Controller:
         self.bricklets["temperature"] = Temperature(self)
         self.bricklets["clock"] = Clock(self)
         self.bricklets["lcd20x4"] = LCD20x4(self)
+        self.bricklets["joystick"] = Joystick(self)
 
         #Initialize main screen
         self.currentScreen = DataScreen(self)
@@ -66,8 +67,10 @@ class Controller:
 
     def startStation(self):
 
-        currentTick = 0
-        while (currentTick < settings["TotalTicks"] or settings["TotalTicks"] < 0) and not self.shutdown:
+        while (self.currentTick < settings["TotalTicks"] or settings["TotalTicks"] < 0) and not self.shutdown:
+
+            #Update I/O
+            self.bricklets["joystick"].update()
 
             #Update Screen
             self.currentScreen.update()
@@ -77,16 +80,7 @@ class Controller:
             delay = tickDuration - (time.time() % tickDuration)
             logging.debug("Next tick delay: " + str(delay))
             time.sleep(delay)
-            currentTick = currentTick + 1
-
-
-        # print("Time: " + str(self.bricklets["clock"].getDateTime()))
-
-        # for i in range(0,5):
-        #     temperature = str(self.bricklets["temperature"].getTemperature()/100)
-        #     print("Temp: " + temperature + " °C")
-
-        #     time.sleep(0.1)
+            self.currentTick = self.currentTick + 1
 
 
         #Program has finished. Shutdown.
