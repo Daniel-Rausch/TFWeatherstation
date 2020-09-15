@@ -1,5 +1,7 @@
 from tinkerforge.bricklet_real_time_clock import BrickletRealTimeClock
 
+from datetime import datetime
+
 from settings import settings
 from bricklets.bricklet import Bricklet
 
@@ -11,5 +13,5 @@ class Clock(Bricklet):
         self.__clock = BrickletRealTimeClock(settings["UIDs"]["RTC"], self._controller.ipcon)
 
     def getDateTime(self):
-        year, month, day, hour, minute, second, centisecond, weekday = self.__clock.get_date_time()
-        #return self.__clock.get_temperature()
+        year, month, day, hour, minute, second, centisecond, _ = self.__clock.get_date_time()
+        return datetime(year, month, day, hour, minute, second, centisecond*10*1000)

@@ -10,5 +10,8 @@ settings = {
         "Barometer" : "vLp",
     },
 
+    "TicksPerSecond" : 2,
+    "TotalTicks" : 10, #Negative for endless exectuion
+
     "LoggingLevel" : "INFO",
 }

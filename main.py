@@ -4,15 +4,18 @@ UID = "vBF" # Change XYZ to the UID of your LCD 20x4 Bricklet
 
 
 from tinkerforge.ip_connection import IPConnection
-from tinkerforge.bricklet_lcd_20x4 import BrickletLCD20x4
 
 import logging
 import time
 
 
 from settings import settings
+
 from bricklets.temperature import Temperature
 from bricklets.clock import Clock
+from bricklets.lcd20x4 import LCD20x4
+
+from screens.datascreen import DataScreen
 
 
 
@@ -24,6 +27,8 @@ class Controller:
     def __init__(self):
         self.bricklets = {}
         self.ipcon = ""
+        self.currentScreen = ""
+        self.shutdown = False
 
         #Ensure that there is ever only a single controller instance
         if not Controller.mainController == "":
@@ -46,21 +51,43 @@ class Controller:
 
         #Create all bricklet classes and store them
         self.ipcon = IPConnection()
+        self.ipcon.connect(HOST, PORT)
 
         self.bricklets["temperature"] = Temperature(self)
         self.bricklets["clock"] = Clock(self)
+        self.bricklets["lcd20x4"] = LCD20x4(self)
 
-        self.ipcon.connect(HOST, PORT)
+        #Initialize main screen
+        self.currentScreen = DataScreen(self)
+
+        logging.info("Finished controller Initiatilization at time " + str(self.bricklets["clock"].getDateTime()))
 
 
 
     def startStation(self):
 
-        for i in range(0,5):
-            temperature = str(self.bricklets["temperature"].getTemperature()/100)
-            print("Temp: " + temperature + " °C")
+        currentTick = 0
+        while (currentTick < settings["TotalTicks"] or settings["TotalTicks"] < 0) and not self.shutdown:
 
-            time.sleep(0.1)
+            #Update Screen
+            self.currentScreen.update()
+
+            #Sleep until the next tick can occur
+            tickDuration = 1.0 / settings["TicksPerSecond"]
+            delay = tickDuration - (time.time() % tickDuration)
+            logging.debug("Next tick delay: " + str(delay))
+            time.sleep(delay)
+            currentTick = currentTick + 1
+
+
+        # print("Time: " + str(self.bricklets["clock"].getDateTime()))
+
+        # for i in range(0,5):
+        #     temperature = str(self.bricklets["temperature"].getTemperature()/100)
+        #     print("Temp: " + temperature + " °C")
+
+        #     time.sleep(0.1)
+
 
         #Program has finished. Shutdown.
         self.__shutdownStation()

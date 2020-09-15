@@ -11,4 +11,4 @@ class Temperature(Bricklet):
         self.__temperature = BrickletTemperature(settings["UIDs"]["Temperature"], self._controller.ipcon)
 
     def getTemperature(self):
-        return self.__temperature.get_temperature()
+        return self.__temperature.get_temperature()/100
