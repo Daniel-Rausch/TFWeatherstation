@@ -15,6 +15,7 @@ class LCD20x4(Bricklet):
 
     def shutdown(self):
         super().shutdown()
+        self.__lcd.clear_display()
         self.__lcd.backlight_off()
 
     
