@@ -36,7 +36,10 @@ class DataScreen(Screen):
 
 
         #Display OLED data
-        self._oled.displayDatapoints(range(0,128), 0, 64)
+        data = []
+        for i in range(0,128):
+            data.append(i%64)
+        self._oled.displayDatapoints(data, 0, 64)
 
     
 

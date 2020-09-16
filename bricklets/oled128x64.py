@@ -24,14 +24,14 @@ class OLED128x64(Bricklet):
 
     def displayDatapoints(self, data, lowerBound, upperBound):
         #Convert into pixel matrix. 0,0 is top left
-        pixels = [[0] * self.WIDTH] * self.HEIGHT
-        for i in range(-1, min(len(data), -128), -1):
+        pixels = [[0] * self.WIDTH for _ in range(0, self.HEIGHT)]
+        for i in range(-1, min(len(data), - self.WIDTH - 1), -1):
             if lowerBound <= data[i] < upperBound:
                 position = int((data[i] - lowerBound)/(upperBound-lowerBound)*self.HEIGHT) #Position counted from bottom
-                pixels[self.HEIGHT - position][self.WIDTH + i] = 1
+                pixels[self.HEIGHT - 1 - position][self.WIDTH + i] = 1
 
         #Convert pixel matrix to byte matrix for oled
-        bytepixels = [[0] * self.WIDTH] * (self.HEIGHT//8)
+        bytepixels = [[0] * self.WIDTH for _ in range(0,self.HEIGHT//8)]
         for row in range(0, self.HEIGHT//8):
             for column in range(0, self.WIDTH):
                 for i in range (0,8):
