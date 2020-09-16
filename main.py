@@ -9,6 +9,7 @@ import logging
 import time
 
 
+from datahandler import Datahandler
 from settings import settings
 
 from bricklets.temperature import Temperature
@@ -27,8 +28,10 @@ class Controller:
 
     def __init__(self):
         self.bricklets = {}
-        self.ipcon = ""
-        self.currentScreen = ""
+        self.datahandler = None
+        self.currentScreen = None
+
+        self.ipcon = None
         self.currentTick = 0
         self.shutdown = False
 
@@ -58,6 +61,9 @@ class Controller:
         self.bricklets["lcd20x4"] = LCD20x4(self)
         self.bricklets["joystick"] = Joystick(self)
 
+        #Initialize data handler
+        self.datahandler = Datahandler(self)
+
         #Initialize main screen
         self.currentScreen = DataScreen(self)
 
@@ -68,6 +74,9 @@ class Controller:
     def startStation(self):
 
         while (self.currentTick < settings["TotalTicks"] or settings["TotalTicks"] < 0) and not self.shutdown:
+
+            #Update data handler
+            self.datahandler.update()
 
             #Update I/O
             self.bricklets["joystick"].update()
@@ -89,8 +98,10 @@ class Controller:
 
 
     def __shutdownStation(self):
+        logging.info("Shutdown at time " + str(self.bricklets["clock"].getDateTime()))
         for bricklet in self.bricklets.values():
             bricklet.shutdown()
+        self.datahandler.shutdown()
         self.ipcon.disconnect()
 
 
