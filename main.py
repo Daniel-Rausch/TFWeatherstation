@@ -51,7 +51,7 @@ class Controller:
             "ERROR" : logging.ERROR,
             "CRITICAL" : logging.CRITICAL,
         }
-        logging.basicConfig(level=logginglevels.get(settings["LoggingLevel"], logging.WARNING), format = "LOGGING:%(levelname)s   %(message)s")
+        logging.basicConfig(level=logginglevels.get(settings["LoggingLevel"], logging.ERROR), format = "LOGGING:%(levelname)s   %(message)s")
 
         #Create all bricklet classes and store them
         self.ipcon = IPConnection()

@@ -1,5 +1,7 @@
 from tinkerforge.bricklet_oled_128x64 import BrickletOLED128x64
 
+import time
+
 from settings import settings
 from bricklets.bricklet import Bricklet
 
@@ -25,11 +27,15 @@ class OLED128x64(Bricklet):
     def displayDatapoints(self, data, lowerBound, upperBound):
         #Convert into pixel matrix. 0,0 is top left
         pixels = [[0] * self.WIDTH for _ in range(0, self.HEIGHT)]
-        for i in range(-1, min(len(data), - self.WIDTH - 1), -1):
+        for i in range(-1, max(-len(data), - self.WIDTH - 1), -1):
             if lowerBound <= data[i] < upperBound:
                 position = int((data[i] - lowerBound)/(upperBound-lowerBound)*self.HEIGHT) #Position counted from bottom
                 pixels[self.HEIGHT - 1 - position][self.WIDTH + i] = 1
+        self.printPixelMatrix(pixels)
 
+
+
+    def printPixelMatrix(self, pixels):
         #Convert pixel matrix to byte matrix for oled
         bytepixels = [[0] * self.WIDTH for _ in range(0,self.HEIGHT//8)]
         for row in range(0, self.HEIGHT//8):
@@ -39,7 +45,8 @@ class OLED128x64(Bricklet):
         
         #Write output
         for i in range (0,16):
-            self.__oled.new_window(i%2 * self.WIDTH//2 , self.WIDTH-1 , i//2, self.HEIGHT/8 -1)
+            args = [i%2 * self.WIDTH//2, (i%2 + 1) * self.WIDTH//2 -1, i//2, i//2]
+            self.__oled.new_window(*args)
             self.__oled.write(bytepixels[i//2][i%2 * self.WIDTH//2 : (i%2 +1) * self.WIDTH//2 ])
 
 
