@@ -2,29 +2,41 @@ from screens.screen import Screen
 
 class DataScreen(Screen):
 
+    OPTIONS = (
+        "Back",
+        "Move",
+        "Shutdown"
+    )
+
     def __init__(self, controller):
         super().__init__(controller)
 
         self.__temp = self._controller.bricklets["temperature"]
+        self.__clock = self._controller.bricklets["clock"]
         self.__joystick = self._controller.bricklets["joystick"]
 
-        self.__text = ["", "", "", ""]
+        self.__currentOption = 0
 
 
 
     def update(self):
         super().update()
 
-        self.processInput()
+        self.processInputs()
 
-        self.__text[0] = "Temp: " + str(self.__temp.getTemperature()) + " \xDFC"
-        self._lcd.displayText(self.__text)
+        #Build and display LCD Text
+        text = ["","","",""]
+        text[0] = "Temperature"
+        text[1] = "{:6.2f}".format(self.__temp.getTemperature())  + "\xDFC to " + "{:6.2f}".format(self.__temp.getTemperature()) + "\xDFC"
+        text[2] = self.__clock.getDateTime().strftime("%y-%m-%d") + " to " + self.__clock.getDateTime().strftime("%y-%m-%d")
+        text[3] = "\x7F {} \x7E".format(DataScreen.OPTIONS[self.__currentOption])
+
+        self._lcd.displayText(text)
 
     
 
-    def processInput(self):
+    def processInputs(self):
         press = self.__joystick.getButtonPress()
         if press:
-            # self.__text[1] =  "Pressed!"
             self._controller.shutdown = True
 
