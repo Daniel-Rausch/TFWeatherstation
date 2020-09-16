@@ -34,6 +34,10 @@ class DataScreen(Screen):
 
         self._lcd.displayText(text)
 
+
+        #Display OLED data
+        self._oled.displayDatapoints(range(0,128), 0, 64)
+
     
 
     def processInputs(self):

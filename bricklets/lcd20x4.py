@@ -29,3 +29,6 @@ class LCD20x4(Bricklet):
             if i == 4:
                 break
 
+
+    def clear(self):
+        self.__lcd.clear_display()

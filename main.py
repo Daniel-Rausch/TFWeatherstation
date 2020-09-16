@@ -15,6 +15,7 @@ from settings import settings
 from bricklets.temperature import Temperature
 from bricklets.clock import Clock
 from bricklets.lcd20x4 import LCD20x4
+from bricklets.oled128x64 import OLED128x64
 from bricklets.joystick import Joystick
 
 from screens.datascreen import DataScreen
@@ -59,6 +60,7 @@ class Controller:
         self.bricklets["temperature"] = Temperature(self)
         self.bricklets["clock"] = Clock(self)
         self.bricklets["lcd20x4"] = LCD20x4(self)
+        self.bricklets["oled128x64"] = OLED128x64(self)
         self.bricklets["joystick"] = Joystick(self)
 
         #Initialize data handler
@@ -87,7 +89,7 @@ class Controller:
             #Sleep until the next tick can occur
             tickDuration = 1.0 / settings["TicksPerSecond"]
             delay = tickDuration - (time.time() % tickDuration)
-            logging.debug("Next tick delay: " + str(delay))
+            logging.debug("Current tick took " + str(time.time() % tickDuration) + " seconds. Next tick delay: " + str(delay))
             time.sleep(delay)
             self.currentTick = self.currentTick + 1
 
