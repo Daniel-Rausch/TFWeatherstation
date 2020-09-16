@@ -20,9 +20,10 @@ class LCD20x4(Bricklet):
     
 
     def displayText(self, text):
-        self.__lcd.clear_display()
         i = 0
         for line in text:
+            if len(line) < 20:
+                line = line + " " * (20-len(line))
             self.__lcd.write_line(i, 0, line)
             i = i + 1
             if i == 4:

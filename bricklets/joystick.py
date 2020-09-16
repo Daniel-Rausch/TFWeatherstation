@@ -19,6 +19,10 @@ class DIR(Enum):
 
 class Joystick(Bricklet):
 
+    DIR_INPUT_THRESHOLD = 75
+    DIR_INPUT_MARGIN = 5
+
+
 
     def __init__(self, controller):
         super().__init__(controller)
@@ -27,8 +31,8 @@ class Joystick(Bricklet):
         self.__buttonPressedDown = False
         self.__tickButtonPress = -1
 
-        self.__lastPos = [0,0]
         self.__lastDir = DIR.CENTER
+        self.__dirInput = None
 
 
 
@@ -46,14 +50,26 @@ class Joystick(Bricklet):
         #process directional presses
         curPos = [self.__joystick.get_position().x, self.__joystick.get_position().y]
         curDir = self.__mapPosToDir(curPos, 0)
-        print(curPos, curDir)
+        curDirPadded = self.__mapPosToDir(curPos, self.DIR_INPUT_MARGIN)
+        if curDir == self.__lastDir:
+            #No change of direction
+            pass
+        elif(curDirPadded != DIR.CENTER):
+            #Change direction and queue input
+            self.__lastDir = curDirPadded
+            self.__dirInput = curDirPadded
+        else:
+            #No directional input
+            self.__lastDir = DIR.CENTER
+            self.__dirInput = None
+            
         
 
 
     def __mapPosToDir(self, curPos, margin):
         #Margin is the amount of pixel that is added to the center, i.e., it shrinks the area of the other directions
 
-        threshold = 75
+        threshold = self.DIR_INPUT_THRESHOLD
 
         #Left
         if curPos[0] < -threshold - margin and abs(curPos[0]) > (abs(curPos[1]) + margin):
@@ -83,6 +99,9 @@ class Joystick(Bricklet):
         return False
 
 
-    def getDirectionPress(self):
+
+    def getDirInput(self):
         #Returns a directional presses, if any. Press is then deleted to prevent multiple activations.
-        pass
+        dirInput = self.__dirInput
+        self.__dirInput = None
+        return dirInput

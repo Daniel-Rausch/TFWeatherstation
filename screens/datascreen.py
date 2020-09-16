@@ -1,3 +1,4 @@
+from bricklets.joystick import DIR
 from screens.screen import Screen
 
 class DataScreen(Screen):
@@ -29,7 +30,7 @@ class DataScreen(Screen):
         text[0] = "Temperature"
         text[1] = "{:6.2f}".format(self.__temp.getTemperature())  + "\xDFC to " + "{:6.2f}".format(self.__temp.getTemperature()) + "\xDFC"
         text[2] = self.__clock.getDateTime().strftime("%y-%m-%d") + " to " + self.__clock.getDateTime().strftime("%y-%m-%d")
-        text[3] = "\x7F {} \x7E".format(DataScreen.OPTIONS[self.__currentOption])
+        text[3] = "\x7F {:^8} \x7E".format(self.OPTIONS[self.__currentOption])
 
         self._lcd.displayText(text)
 
@@ -38,5 +39,13 @@ class DataScreen(Screen):
     def processInputs(self):
         press = self.__joystick.getButtonPress()
         if press:
-            self._controller.shutdown = True
+            if self.__currentOption == 2:
+                self._controller.shutdown = True
+        else:
+            dirInput = self.__joystick.getDirInput()
+            if dirInput == DIR.LEFT:
+                self.__currentOption = (self.__currentOption - 1)%len(self.OPTIONS)
+            elif dirInput == DIR.RIGHT:
+                self.__currentOption = (self.__currentOption + 1)%len(self.OPTIONS)
+
 
