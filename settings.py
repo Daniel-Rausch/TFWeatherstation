@@ -10,13 +10,15 @@ settings = {
         "Barometer" : "vLp",
     },
 
-    "DisplayBounds": {
+    "DisplayDefaultBounds": {
         "TemperatureMin" : 20,
         "TemperatureMax" : 30,
     },
 
     "TicksPerSecond" : 10,
     "TotalTicks" : -1, #Negative for endless exectuion
+
+    "TicksPerLongPress": 10*2, #Number of ticks after which joystick registers a long button press
 
     "LoggingLevel" : "INFO",
 }

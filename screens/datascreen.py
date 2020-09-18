@@ -9,9 +9,8 @@ class DataScreen(Screen):
 
     OPTIONS = (
         "Back",
-        "Time",
-        "Bounds",
-        "Shutdown"
+        "Range",
+        "Bounds"
     )
 
 
@@ -20,27 +19,29 @@ class DataScreen(Screen):
         super().__init__(controller)
 
         self.__clock = self._controller.bricklets["clock"]
-        self.__joystick = self._controller.bricklets["joystick"]
 
         self.__datahandler = self._controller.datahandler
 
         self.__currentOption = 0
 
-        self.__lowerDisplayBound = settings["DisplayBounds"]["TemperatureMin"]
-        self.__upperDisplayBound = settings["DisplayBounds"]["TemperatureMax"]
+        self.__lowerDisplayBound = settings["DisplayDefaultBounds"]["TemperatureMin"]
+        self.__upperDisplayBound = settings["DisplayDefaultBounds"]["TemperatureMax"]
 
 
 
     def update(self):
         super().update()
 
-        self.processInputs()
+        self._processInputs()
 
         data = self.__datahandler.getRecentDataPoints(DATATYPE.TEMPERATURE, 128)
 
         #Build and display LCD Text
         text = ["","","",""]
-        text[0] = "Temperature: {:5.1f}\xDFC".format(data[-1])
+        if len(data) > 0:
+            text[0] = "Temperature: {:5.1f}\xDFC".format(data[-1])
+        else:
+            text[0] = "Temperature: {:>5}\xDFC".format("--.-")
         text[1] = "{:<8}".format("{}\xDFC".format(int(self.__lowerDisplayBound)))  + " to " + "{:<8}".format("{}\xDFC".format(int(self.__upperDisplayBound)))
         text[2] = self.__clock.getDateTime().strftime("%y-%m-%d") + " to " + self.__clock.getDateTime().strftime("%y-%m-%d")
         text[3] = "\x7F {:^8} \x7E".format(self.OPTIONS[self.__currentOption])
@@ -53,13 +54,16 @@ class DataScreen(Screen):
 
     
 
-    def processInputs(self):
-        press = self.__joystick.getButtonPress()
+    def _processInputs(self):
+        super()._processInputs()
+
+        press = self._joystick.getButtonPress()
         if press:
-            if self.__currentOption == self.OPTIONS.index("Shutdown"):
-                self._controller.shutdown = True
+            pass
+        #     if self.__currentOption == self.OPTIONS.index("Shutdown"):
+        #         self._controller.shutdown = True
         else:
-            dirInput = self.__joystick.getDirInput()
+            dirInput = self._joystick.getDirInput()
             if dirInput == DIR.LEFT:
                 self.__currentOption = (self.__currentOption - 1)%len(self.OPTIONS)
             elif dirInput == DIR.RIGHT:

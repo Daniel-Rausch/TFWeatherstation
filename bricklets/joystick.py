@@ -28,8 +28,10 @@ class Joystick(Bricklet):
         super().__init__(controller)
         self.__joystick = BrickletJoystick(settings["UIDs"]["Joystick"], self._controller.ipcon)
 
-        self.__buttonPressedDown = False
-        self.__tickButtonPress = -1
+        self.__buttonPressedDuringLastTick = False
+        self.__buttonPressedStartedAtTick = -1
+        self.__buttonPress = False
+        self.__buttonLongPress = False
 
         self.__lastDir = DIR.CENTER
         self.__dirInput = None
@@ -41,11 +43,17 @@ class Joystick(Bricklet):
         pressed = self.__joystick.is_pressed()
 
         #Check whether button state has changed and update accordingly
-        if not pressed == self.__buttonPressedDown:
-            self.__buttonPressedDown = pressed
-            if pressed:
-                logging.debug("Registered joystick press.")
-                self.__tickButtonPress = self._controller.currentTick
+        if not pressed == self.__buttonPressedDuringLastTick:
+            self.__buttonPressedDuringLastTick = pressed
+            if not pressed: #Register press when joystick is released
+                logging.debug("Registered joystick button press.")
+                self.__buttonPress = True
+            else:
+                self.__buttonPressedStartedAtTick = self._controller.currentTick
+        
+        #Check for long press
+        if pressed and self._controller.currentTick >= self.__buttonPressedStartedAtTick + settings["TicksPerLongPress"]:
+            self.__buttonLongPress = True
 
         #process directional presses
         curPos = [self.__joystick.get_position().x, self.__joystick.get_position().y]
@@ -56,10 +64,12 @@ class Joystick(Bricklet):
             pass
         elif(curDirPadded != DIR.CENTER):
             #Change direction and queue input
+            logging.debug("Registered joystick direction: " + str(curDirPadded.name))
             self.__lastDir = curDirPadded
             self.__dirInput = curDirPadded
         else:
-            #No directional input
+            #Change to no directional input
+            logging.debug("Registered joystick direction: " + str(DIR.CENTER.name))
             self.__lastDir = DIR.CENTER
             self.__dirInput = None
             
@@ -93,10 +103,18 @@ class Joystick(Bricklet):
     
 
     def getButtonPress(self):
-        #Returns true if the button was pressed in the current tick. might need to be changed in the future
-        if self.__buttonPressedDown == True and self._controller.currentTick == self.__tickButtonPress:
-            return True
-        return False
+        #Returns a directional presses, if any. Press is then deleted to prevent multiple activations.
+        buttonPress = self.__buttonPress
+        self.__buttonPress = False
+        return buttonPress
+        
+    
+
+    def getButtonLongPress(self):
+        #Returns a directional presses, if any. Press is then deleted to prevent multiple activations.
+        buttonLongPress = self.__buttonLongPress
+        self.__buttonLongPress = False
+        return buttonLongPress
 
 
 

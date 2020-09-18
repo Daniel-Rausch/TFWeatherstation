@@ -6,6 +6,7 @@ class Screen():
         self._controller = controller
         self._lcd = self._controller.bricklets["lcd20x4"]
         self._oled = self._controller.bricklets["oled128x64"]
+        self._joystick = self._controller.bricklets["joystick"]
 
         self._lcd.clear()
         self._oled.clear()
@@ -14,3 +15,7 @@ class Screen():
 
     def update(self):
         logging.debug("Updating screen: " + type(self).__name__)
+
+    def _processInputs(self):
+        if self._joystick.getButtonLongPress():
+            self._controller.shutdown = True
