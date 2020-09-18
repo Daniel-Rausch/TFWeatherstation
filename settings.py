@@ -18,6 +18,8 @@ settings = {
     "DisplayDefaultBounds": {
         "TemperatureMin" : 20,
         "TemperatureMax" : 30,
+        "LightMin" : 0,
+        "LightMax" : 100,
     },
 
     #Ticks

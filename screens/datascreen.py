@@ -15,17 +15,23 @@ class DataScreen(Screen):
 
 
 
-    def __init__(self, controller):
+    def __init__(self, controller, datatype):
         super().__init__(controller)
 
         self.__clock = self._controller.bricklets["clock"]
 
         self.__datahandler = self._controller.datahandler
+        self.__datatype = datatype
 
         self.__currentOption = 0
 
-        self.__lowerDisplayBound = settings["DisplayDefaultBounds"]["TemperatureMin"]
-        self.__upperDisplayBound = settings["DisplayDefaultBounds"]["TemperatureMax"]
+        if datatype == DATATYPE.TEMPERATURE:
+            self.__lowerDisplayBound = settings["DisplayDefaultBounds"]["TemperatureMin"]
+            self.__upperDisplayBound = settings["DisplayDefaultBounds"]["TemperatureMax"]
+        elif datatype == DATATYPE.LIGHT:
+            self.__lowerDisplayBound = settings["DisplayDefaultBounds"]["LightMin"]
+            self.__upperDisplayBound = settings["DisplayDefaultBounds"]["LightMax"]
+
 
 
 
@@ -34,15 +40,22 @@ class DataScreen(Screen):
 
         self.__processInputs()
 
-        data = self.__datahandler.getRecentDataPoints(DATATYPE.TEMPERATURE, 128)
+        data = self.__datahandler.getRecentDataPoints(self.__datatype, 128)
 
         #Build and display LCD Text
         text = ["","","",""]
-        if len(data) > 0:
-            text[0] = "Temperature: {:5.1f}\xDFC".format(data[-1])
-        else:
-            text[0] = "Temperature: {:>5}\xDFC".format("--.-")
-        text[1] = "{:<8}".format("{}\xDFC".format(int(self.__lowerDisplayBound)))  + " to " + "{:<8}".format("{}\xDFC".format(int(self.__upperDisplayBound)))
+        if self.__datatype == DATATYPE.TEMPERATURE:
+            if len(data) > 0:
+                text[0] = "Temperature: {:5.1f}\xDFC".format(data[-1])
+            else:
+                text[0] = "Temperature: {:>5}\xDFC".format("-.-")
+            text[1] = "{:>8}".format("{}\xDFC".format(int(self.__lowerDisplayBound)))  + " to " + "{:>8}".format("{}\xDFC".format(int(self.__upperDisplayBound)))
+        elif self.__datatype == DATATYPE.LIGHT:
+            if len(data) > 0:
+                text[0] = "Light: {:10.1f} lx".format(data[-1])
+            else:
+                text[0] = "Light: {:>10} lx".format("-.-")
+            text[1] = "{:>8}".format("{} lx".format(int(self.__lowerDisplayBound)))  + " to " + "{:>8}".format("{} lx".format(int(self.__upperDisplayBound)))
         text[2] = self.__clock.getDateTime().strftime("%y-%m-%d") + " to " + self.__clock.getDateTime().strftime("%y-%m-%d")
         text[3] = "\x7F {:^8} \x7E".format(self.OPTIONS[self.__currentOption])
 
