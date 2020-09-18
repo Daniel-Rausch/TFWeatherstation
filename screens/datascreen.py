@@ -31,6 +31,12 @@ class DataScreen(Screen):
         elif datatype == DATATYPE.LIGHT:
             self.__lowerDisplayBound = settings["DisplayDefaultBounds"]["LightMin"]
             self.__upperDisplayBound = settings["DisplayDefaultBounds"]["LightMax"]
+        elif datatype == DATATYPE.HUMIDITY:
+            self.__lowerDisplayBound = settings["DisplayDefaultBounds"]["HumidityMin"]
+            self.__upperDisplayBound = settings["DisplayDefaultBounds"]["HumidityMax"]
+        elif datatype == DATATYPE.PRESSURE:
+            self.__lowerDisplayBound = settings["DisplayDefaultBounds"]["PressureMin"]
+            self.__upperDisplayBound = settings["DisplayDefaultBounds"]["PressureMax"]
 
 
 
@@ -56,6 +62,18 @@ class DataScreen(Screen):
             else:
                 text[0] = "Light: {:>10} lx".format("-.-")
             text[1] = "{:>8}".format("{} lx".format(int(self.__lowerDisplayBound)))  + " to " + "{:>8}".format("{} lx".format(int(self.__upperDisplayBound)))
+        elif self.__datatype == DATATYPE.HUMIDITY:
+            if len(data) > 0:
+                text[0] = "Humidity: {:8.1f} %".format(data[-1])
+            else:
+                text[0] = "Humidity: {:>8} %".format("-.-")
+            text[1] = "{:>8}".format("{} %".format(int(self.__lowerDisplayBound)))  + " to " + "{:>8}".format("{} %".format(int(self.__upperDisplayBound)))
+        elif self.__datatype == DATATYPE.PRESSURE:
+            if len(data) > 0:
+                text[0] = "Pressure: {:5d} hPa".format(int(data[-1]))
+            else:
+                text[0] = "Pressure: {:>5} hPa".format("---")
+            text[1] = "{:>8}".format("{} hPa".format(int(self.__lowerDisplayBound)))  + " to " + "{:>8}".format("{} hPa".format(int(self.__upperDisplayBound)))
         text[2] = self.__clock.getDateTime().strftime("%y-%m-%d") + " to " + self.__clock.getDateTime().strftime("%y-%m-%d")
         text[3] = "\x7F {:^8} \x7E".format(self.OPTIONS[self.__currentOption])
 

@@ -8,7 +8,7 @@ class DATATYPE(Enum):
     TEMPERATURE = 0
     LIGHT = 1
     HUMIDITY = 2
-    BAROMETER = 3
+    PRESSURE = 3
 
 
 
@@ -55,10 +55,10 @@ class DataContainer():
             self.__bricklet = self.__controller.bricklets["temperature"]
         elif self.__datatype == DATATYPE.LIGHT:
             self.__bricklet = self.__controller.bricklets["light"]
-        # elif self.__datatype == DATATYPE.HUMIDITY:
-        #     self.__bricklet = self.__controller.bricklets["humidity"]
-        # elif self.__datatype == DATATYPE.BAROMETER:
-        #     self.__bricklet = self.__controller.bricklets["barometer"]
+        elif self.__datatype == DATATYPE.HUMIDITY:
+            self.__bricklet = self.__controller.bricklets["humidity"]
+        elif self.__datatype == DATATYPE.PRESSURE:
+            self.__bricklet = self.__controller.bricklets["barometer"]
 
         self.__intermediateMeasurements = []
         self.__aggregatedValues = []
@@ -70,10 +70,10 @@ class DataContainer():
             self.__intermediateMeasurements.append(self.__bricklet.getTemperature())
         elif self.__datatype == DATATYPE.LIGHT:
             self.__intermediateMeasurements.append(self.__bricklet.getLight())
-        # elif self.__datatype == DATATYPE.HUMIDITY:
-        #     self.__intermediateMeasurements.append(self.__bricklet.getHumidity()) #TODO
-        # elif self.__datatype == DATATYPE.BAROMETER:
-        #     self.__intermediateMeasurements.append(self.__bricklet.getPressure()) #TODO
+        elif self.__datatype == DATATYPE.HUMIDITY:
+            self.__intermediateMeasurements.append(self.__bricklet.getHumidity())
+        elif self.__datatype == DATATYPE.PRESSURE:
+            self.__intermediateMeasurements.append(self.__bricklet.getPressure())
 
         if len(self.__intermediateMeasurements) == settings["AggregationsPerDataPoint"]:
             average = sum(self.__intermediateMeasurements)

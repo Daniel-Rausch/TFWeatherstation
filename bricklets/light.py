@@ -8,7 +8,7 @@ class Light(Bricklet):
 
     def __init__(self, controller):
         super().__init__(controller)
-        self.__temperature = BrickletAmbientLightV2(settings["UIDs"]["Light2.0"], self._controller.ipcon)
+        self.__light = BrickletAmbientLightV2(settings["UIDs"]["Light2.0"], self._controller.ipcon)
 
     def getLight(self):
-        return self.__temperature.get_illuminance()/100
+        return self.__light.get_illuminance()/100  #measures as 1/100 lux

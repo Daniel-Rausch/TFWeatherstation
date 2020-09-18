@@ -14,6 +14,8 @@ from settings import settings
 
 from bricklets.temperature import Temperature
 from bricklets.light import Light
+from bricklets.humidity import Humidity
+from bricklets.barometer import Barometer
 from bricklets.clock import Clock
 from bricklets.lcd20x4 import LCD20x4
 from bricklets.oled128x64 import OLED128x64
@@ -60,8 +62,8 @@ class Controller:
 
         self.bricklets["temperature"] = Temperature(self)
         self.bricklets["light"] = Light(self)
-        # self.bricklets["humidity"] = Humidity(self)
-        # self.bricklets["barometer"] = Barometer(self)
+        self.bricklets["humidity"] = Humidity(self)
+        self.bricklets["barometer"] = Barometer(self)
         self.bricklets["clock"] = Clock(self)
         self.bricklets["lcd20x4"] = LCD20x4(self)
         self.bricklets["oled128x64"] = OLED128x64(self)
@@ -71,7 +73,7 @@ class Controller:
         self.datahandler = Datahandler(self)
 
         #Initialize main screen
-        self.currentScreen = DataScreen(self, DATATYPE.LIGHT)
+        self.currentScreen = DataScreen(self, DATATYPE.PRESSURE)
 
         logging.info("Finished controller Initiatilization at time " + str(self.bricklets["clock"].getDateTime()))
 

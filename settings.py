@@ -16,10 +16,14 @@ settings = {
 
     #Display
     "DisplayDefaultBounds": {
-        "TemperatureMin" : 20,
+        "TemperatureMin" : 20, #celsius
         "TemperatureMax" : 30,
-        "LightMin" : 0,
+        "LightMin" : 0, #lux
         "LightMax" : 100,
+        "HumidityMin" : 0, #percent
+        "HumidityMax" : 100,
+        "PressureMin" : 900, #hPa
+        "PressureMax" : 1100,
     },
 
     #Ticks
