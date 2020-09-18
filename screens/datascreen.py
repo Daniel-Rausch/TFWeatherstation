@@ -32,7 +32,7 @@ class DataScreen(Screen):
     def update(self):
         super().update()
 
-        self._processInputs()
+        self.__processInputs()
 
         data = self.__datahandler.getRecentDataPoints(DATATYPE.TEMPERATURE, 128)
 
@@ -54,14 +54,16 @@ class DataScreen(Screen):
 
     
 
-    def _processInputs(self):
-        super()._processInputs()
+    def __processInputs(self):
+        #Process button long press
+        if self._joystick.getButtonLongPress():
+            self._controller.shutdown = True #TODO: change to "back" function
+            return
 
+        #Process button press and directional inputs
         press = self._joystick.getButtonPress()
         if press:
             pass
-        #     if self.__currentOption == self.OPTIONS.index("Shutdown"):
-        #         self._controller.shutdown = True
         else:
             dirInput = self._joystick.getDirInput()
             if dirInput == DIR.LEFT:

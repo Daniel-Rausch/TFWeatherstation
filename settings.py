@@ -1,3 +1,7 @@
+TICKS_PER_SECOND = 10
+
+
+
 settings = {
     "UIDs" : {
         "LCD20x4" : "vBF",
@@ -10,15 +14,22 @@ settings = {
         "Barometer" : "vLp",
     },
 
+    #Display
     "DisplayDefaultBounds": {
         "TemperatureMin" : 20,
         "TemperatureMax" : 30,
     },
 
-    "TicksPerSecond" : 10,
+    #Ticks
+    "TicksPerSecond" : TICKS_PER_SECOND,
     "TotalTicks" : -1, #Negative for endless exectuion
 
-    "TicksPerLongPress": 10*2, #Number of ticks after which joystick registers a long button press
+    #Joystick
+    "TicksPerLongPress": TICKS_PER_SECOND*1, #Number of ticks after which joystick registers a long button press
+
+    #Data model
+    "AggregationsPerDataPoint": TICKS_PER_SECOND,
+    "TicksPerMeasurement": 1,
 
     "LoggingLevel" : "INFO",
 }

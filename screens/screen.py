@@ -15,7 +15,3 @@ class Screen():
 
     def update(self):
         logging.debug("Updating screen: " + type(self).__name__)
-
-    def _processInputs(self):
-        if self._joystick.getButtonLongPress():
-            self._controller.shutdown = True
