@@ -94,7 +94,7 @@ class Controller:
             #Sleep until the next tick can occur
             tickDuration = 1.0 / settings["TicksPerSecond"]
             delay = tickDuration - (time.time() % tickDuration)
-            logging.debug("Current tick took " + str(time.time() % tickDuration) + " seconds. Next tick delay: " + str(delay))
+            logging.debug("Current tick took {:4d} ms. Next tick delay: {:4d} ms".format(int((time.time() % tickDuration)*1000), int(delay*1000)))
             time.sleep(delay)
             self.currentTick = self.currentTick + 1
 

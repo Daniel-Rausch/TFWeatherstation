@@ -62,11 +62,56 @@ class DataScreen(Screen):
         if self.__currentMode == None:
             self.__displayLCDTextModeNone(data, pureData)
         elif self.__currentMode == self.OPTIONS[1]:
-            self.__displayLCDTextModeRange()
-
+            self.__displayLCDTextModeRange(data)
 
         #Display OLED data
         self._oled.displayDatapoints(pureData, self.__lowerDisplayBound, self.__upperDisplayBound)
+
+
+
+    def __processInputs(self):
+        #Process button long press
+        if self._joystick.getButtonLongPress():
+            #Back (independently of current mode)
+            self._changeScreen(mainscreen.MainScreen(self._controller))
+            return
+
+        #Process button press and directional inputs
+        press = self._joystick.getButtonPress()
+        if press:
+            if self.__currentMode == None:
+                #Currently in main view of datascreen
+                if self.__currentOption == 0:
+                    #Back
+                    self._changeScreen(mainscreen.MainScreen(self._controller))
+                elif self.__currentOption == 1:
+                    #Range
+                    self.__currentMode = self.OPTIONS[1]
+                    self.__currentOption = self.__currentTimeframeType
+
+            elif self.__currentMode == self.OPTIONS[1]:
+                #Currently selecting Range
+                self.__currentMode = None
+                self.__currentOption = 1
+
+        else:
+            if self.__currentMode == None:
+                #Currently in main view of datascreen
+                dirInput = self._joystick.getDirInput()
+                if dirInput == DIR.LEFT:
+                    self.__currentOption = (self.__currentOption - 1)%len(self.OPTIONS)
+                elif dirInput == DIR.RIGHT:
+                    self.__currentOption = (self.__currentOption + 1)%len(self.OPTIONS)
+
+            elif self.__currentMode == self.OPTIONS[1]:
+                #Currently selecting Range
+                dirInput = self._joystick.getDirInput()
+                if dirInput == DIR.UP:
+                    self.__currentOption = (self.__currentOption - 1)%len(self.__timeframes)
+                    self.__currentTimeframeType = self.__currentOption
+                elif dirInput == DIR.DOWN:
+                    self.__currentOption = (self.__currentOption + 1)%len(self.__timeframes)
+                    self.__currentTimeframeType = self.__currentOption
 
     
 
@@ -117,59 +162,19 @@ class DataScreen(Screen):
     
 
 
-    def __displayLCDTextModeRange(self):
+    def __displayLCDTextModeRange(self, data):
         text = ["","","",""]
-        text[0] = "Select data range:"
+        text[0] = "Data range:"
 
-        offset = max(0, self.__currentOption-3)
-        for i in range(0,3):
-            text[i+1] = "{:1}{:19}".format(
+        if len(data) >= 1:
+            currentTime = datetime.fromtimestamp(data[-1][0])
+            initialTime = currentTime - timedelta(seconds= self.__timeframes[self.__currentTimeframeType][1] * self.WIDTH_OF_GRAPH)
+            text[1] = initialTime.strftime("%y-%m-%d") + " to " + currentTime.strftime("%y-%m-%d")
+
+        offset = max(0, self.__currentOption-1)
+        for i in range(0,2):
+            text[i+2] = "{:1}{:19}".format(
                 "\x7E" if self.__currentOption == i + offset else "",
                 self.__timeframes[i + offset][0]
             )
         self._lcd.displayText(text)
-
-
-
-    def __processInputs(self):
-        #Process button long press
-        if self._joystick.getButtonLongPress():
-            #Back (independently of current mode)
-            self._changeScreen(mainscreen.MainScreen(self._controller))
-            return
-
-        #Process button press and directional inputs
-        press = self._joystick.getButtonPress()
-        if press:
-            if self.__currentMode == None:
-                #Currently in main view of datascreen
-                if self.__currentOption == 0:
-                    #Back
-                    self._changeScreen(mainscreen.MainScreen(self._controller))
-                elif self.__currentOption == 1:
-                    #Range
-                    self.__currentMode = self.OPTIONS[1]
-                    self.__currentOption = self.__currentTimeframeType
-
-            elif self.__currentMode == self.OPTIONS[1]:
-                #Currently selecting Range
-                self.__currentMode = None
-                self.__currentTimeframeType = self.__currentOption
-                self.__currentOption = 1
-
-        else:
-            if self.__currentMode == None:
-                #Currently in main view of datascreen
-                dirInput = self._joystick.getDirInput()
-                if dirInput == DIR.LEFT:
-                    self.__currentOption = (self.__currentOption - 1)%len(self.OPTIONS)
-                elif dirInput == DIR.RIGHT:
-                    self.__currentOption = (self.__currentOption + 1)%len(self.OPTIONS)
-
-            elif self.__currentMode == self.OPTIONS[1]:
-                #Currently selecting Range
-                dirInput = self._joystick.getDirInput()
-                if dirInput == DIR.UP:
-                    self.__currentOption = (self.__currentOption - 1)%len(self.__timeframes)
-                elif dirInput == DIR.DOWN:
-                    self.__currentOption = (self.__currentOption + 1)%len(self.__timeframes)

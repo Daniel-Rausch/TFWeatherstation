@@ -26,8 +26,8 @@ settings = {
         "PressureMin" : 950, #hPa
         "PressureMax" : 1050,
     },
-    "DisplayTimeframes": [
-        ("Seconds", 1), # Second component specifies the time in seconds.
+    "DisplayTimeframes": [ # Second component specifies the time in seconds.
+        ("Seconds", 1), 
         ("Minutes", 60),
         ("Hours", 60 * 60),
         ("Days", 60 * 60 * 24),
