@@ -22,8 +22,8 @@ settings = {
         "LightMax" : 100,
         "HumidityMin" : 0, #percent
         "HumidityMax" : 100,
-        "PressureMin" : 900, #hPa
-        "PressureMax" : 1100,
+        "PressureMin" : 950, #hPa
+        "PressureMax" : 1050,
     },
 
     #Ticks

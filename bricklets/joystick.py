@@ -47,7 +47,10 @@ class Joystick(Bricklet):
             self.__buttonPressedDuringLastTick = pressed
             if not pressed: #Register press when joystick is released
                 logging.debug("Registered joystick button press.")
-                self.__buttonPress = True
+
+                #Only store button press if long press wasn't already registered
+                if not self.__buttonLongPress:
+                    self.__buttonPress = True
             else:
                 self.__buttonPressedStartedAtTick = self._controller.currentTick
         
