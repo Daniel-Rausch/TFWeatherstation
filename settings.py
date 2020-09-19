@@ -26,13 +26,14 @@ settings = {
         "PressureMin" : 950, #hPa
         "PressureMax" : 1050,
     },
-    "DisplayTimeFrames": [
+    "DisplayTimeframes": [
         ("Seconds", 1), # Second component specifies the time in seconds.
         ("Minutes", 60),
         ("Hours", 60 * 60),
         ("Days", 60 * 60 * 24),
         ("Weeks", 60 * 60 * 24 * 7),
     ],
+    "DefaultDisplayTimeframe": 0, # Index that determines which of the above timeframes is the default
 
     #Ticks
     "TicksPerSecond" : TICKS_PER_SECOND,

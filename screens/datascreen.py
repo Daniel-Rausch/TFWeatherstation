@@ -1,3 +1,5 @@
+from datetime import datetime, timedelta
+
 from bricklets.joystick import DIR
 from screens.screen import Screen
 import screens.mainscreen as mainscreen
@@ -14,12 +16,12 @@ class DataScreen(Screen):
         "Bounds"
     )
 
+    WIDTH_OF_GRAPH = 128
+
 
 
     def __init__(self, controller, datatype):
         super().__init__(controller)
-
-        self.__clock = self._controller.bricklets["clock"]
 
         self.__datahandler = self._controller.datahandler
         self.__datatype = datatype
@@ -39,6 +41,9 @@ class DataScreen(Screen):
             self.__lowerDisplayBound = settings["DisplayDefaultBounds"]["PressureMin"]
             self.__upperDisplayBound = settings["DisplayDefaultBounds"]["PressureMax"]
 
+        self.__timeframes = settings["DisplayTimeframes"]
+        self.__currentTimeframeIndex = settings["DefaultDisplayTimeframe"]
+
 
 
 
@@ -47,35 +52,44 @@ class DataScreen(Screen):
 
         self.__processInputs()
 
-        data = self.__datahandler.getRecentDataPoints(self.__datatype, 128)
+        data = self.__datahandler.getRecentDataPoints(self.__datatype, self.__timeframes[self.__currentTimeframeIndex][0], self.WIDTH_OF_GRAPH)
+        pureData = []
+        for (_, value, _) in data:
+            pureData.append(value)
 
         #Build and display LCD Text
         text = ["","","",""]
         if self.__datatype == DATATYPE.TEMPERATURE:
-            if len(data) > 0:
-                text[0] = "Temperature: {:5.1f}\xDFC".format(data[-1])
+            if len(pureData) > 0:
+                text[0] = "Temperature: {:5.1f}\xDFC".format(pureData[-1])
             else:
                 text[0] = "Temperature: {:>5}\xDFC".format("-.-")
             text[1] = "{:>8}".format("{}\xDFC".format(int(self.__lowerDisplayBound)))  + " to " + "{:>8}".format("{}\xDFC".format(int(self.__upperDisplayBound)))
         elif self.__datatype == DATATYPE.LIGHT:
-            if len(data) > 0:
-                text[0] = "Light: {:10.1f} lx".format(data[-1])
+            if len(pureData) > 0:
+                text[0] = "Light: {:10.1f} lx".format(pureData[-1])
             else:
                 text[0] = "Light: {:>10} lx".format("-.-")
             text[1] = "{:>8}".format("{} lx".format(int(self.__lowerDisplayBound)))  + " to " + "{:>8}".format("{} lx".format(int(self.__upperDisplayBound)))
         elif self.__datatype == DATATYPE.HUMIDITY:
-            if len(data) > 0:
-                text[0] = "Humidity: {:8.1f} %".format(data[-1])
+            if len(pureData) > 0:
+                text[0] = "Humidity: {:8.1f} %".format(pureData[-1])
             else:
                 text[0] = "Humidity: {:>8} %".format("-.-")
             text[1] = "{:>8}".format("{} %".format(int(self.__lowerDisplayBound)))  + " to " + "{:>8}".format("{} %".format(int(self.__upperDisplayBound)))
         elif self.__datatype == DATATYPE.PRESSURE:
-            if len(data) > 0:
-                text[0] = "Pressure: {:5d} hPa".format(int(data[-1]))
+            if len(pureData) > 0:
+                text[0] = "Pressure: {:5d} hPa".format(int(pureData[-1]))
             else:
                 text[0] = "Pressure: {:>5} hPa".format("---")
             text[1] = "{:>8}".format("{} hPa".format(int(self.__lowerDisplayBound)))  + " to " + "{:>8}".format("{} hPa".format(int(self.__upperDisplayBound)))
-        text[2] = self.__clock.getDateTime().strftime("%y-%m-%d") + " to " + self.__clock.getDateTime().strftime("%y-%m-%d")
+        #text[2] = self.__clock.getDateTime().strftime("%y-%m-%d") + " to " + self.__clock.getDateTime().strftime("%y-%m-%d")
+        if len(data) >= 1:
+            currentTime = datetime.fromtimestamp(data[-1][0])
+            initialTime = currentTime - timedelta(seconds= self.__timeframes[self.__currentTimeframeIndex][1] * self.WIDTH_OF_GRAPH)
+            text[2] = initialTime.strftime("%y-%m-%d") + " to " + currentTime.strftime("%y-%m-%d")
+        else:
+            text[2] = "xx-xx-xx to xx-xx-xx"
         #text[3] = "\x7F {:^8} \x7E".format(self.OPTIONS[self.__currentOption])
         formatStringData = (
             "\x7E" if self.__currentOption == 0 else "",
@@ -91,14 +105,14 @@ class DataScreen(Screen):
 
 
         #Display OLED data
-        self._oled.displayDatapoints(data, self.__lowerDisplayBound, self.__upperDisplayBound)
+        self._oled.displayDatapoints(pureData, self.__lowerDisplayBound, self.__upperDisplayBound)
 
     
 
     def __processInputs(self):
         #Process button long press
         if self._joystick.getButtonLongPress():
-            self._controller.shutdown = True #TODO: change to "back" function
+            self._changeScreen(mainscreen.MainScreen(self._controller))
             return
 
         #Process button press and directional inputs

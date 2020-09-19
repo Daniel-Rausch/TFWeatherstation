@@ -33,8 +33,8 @@ class Datahandler():
 
     
 
-    def getRecentDataPoints(self, datatype, count):
-        return self.__datacontainer[datatype].getRecentDataPoints(count)
+    def getRecentDataPoints(self, datatype, timeframeName, count): #Returns array containing values (timestamp, value, numAggregations)
+        return self.__datacontainer[datatype].getRecentDataPoints(timeframeName, count)
 
 
 
@@ -50,6 +50,7 @@ class DataContainer():
     def __init__(self, controller, datatype):
         self.__controller = controller
         self.__datatype = datatype
+        self.__clock = self.__controller.bricklets["clock"]
 
         if self.__datatype == DATATYPE.TEMPERATURE:
             self.__bricklet = self.__controller.bricklets["temperature"]
@@ -60,8 +61,23 @@ class DataContainer():
         elif self.__datatype == DATATYPE.PRESSURE:
             self.__bricklet = self.__controller.bricklets["barometer"]
 
+        self.__timeframes = settings["DisplayTimeframes"]
+
         self.__intermediateMeasurements = []
-        self.__aggregatedValues = []
+
+        self.__valueID = 0
+        self.__aggregatedValues = [] # Format is (id, timestamp, value)
+        self.__aggregationsPerTimeframe = {} # Dict of different time frames. each entry is an array of values (timestamp, value, numAggregations)
+        self.__indexNextValueToBeMergedIntoTimeframe = {} # Dict of different time frames. Each entry is an integer denoting the first position from __aggregatedValues that still needs to be merged into __aggregationsPerTimeframe
+
+        self.__initiateData()
+
+
+
+    def __initiateData(self):
+        for [timeframeName, _ ] in self.__timeframes:
+            self.__aggregationsPerTimeframe[timeframeName] = []
+            self.__indexNextValueToBeMergedIntoTimeframe[timeframeName] = -1
 
 
 
@@ -78,10 +94,35 @@ class DataContainer():
         if len(self.__intermediateMeasurements) == settings["AggregationsPerDataPoint"]:
             average = sum(self.__intermediateMeasurements)
             average /= len(self.__intermediateMeasurements)
-            self.__aggregatedValues.append(average)
+
+            timestamp = self.__clock.getTimestamp()
+            self.__aggregatedValues.append((id, timestamp, average))
+                
+
+            #Check whether intermediate aggregations can be combined into a new aggregated field
+            #TODO needs some handling for overlapping cases where a timeframe was already initialized with partial data
+            for [timeframeName, timeFrameDuration] in self.__timeframes:
+                lastTimeframe = 0
+                if len(self.__aggregationsPerTimeframe[timeframeName]) > 0:
+                    lastTimeframe = self.__aggregationsPerTimeframe[timeframeName][-1][1]
+                currentTimeFrame = timestamp // timeFrameDuration
+
+                if currentTimeFrame > lastTimeframe:
+                    #Special case: At the start of the measurements, the first aggregated value will be for currentTimeFrame. I.e., there are no previous values yet that can already be merged. So only merge if there are some previous values.
+                    if self.__indexNextValueToBeMergedIntoTimeframe[timeframeName] != -1:
+                        countToBeMerged = (len(self.__aggregatedValues) - 1) - self.__indexNextValueToBeMergedIntoTimeframe[timeframeName]
+                        mergedValues = 0
+                        for (_, _, value) in self.__aggregatedValues[(-1 - countToBeMerged):-1]:
+                            mergedValues += value
+                        mergedValues /= countToBeMerged
+                        self.__aggregationsPerTimeframe[timeframeName].append((currentTimeFrame * timeFrameDuration, mergedValues, countToBeMerged)) #TODO: cannot simply append in case of gaps
+                    
+                    self.__indexNextValueToBeMergedIntoTimeframe[timeframeName] = len(self.__aggregatedValues) - 1
+
+            #Everything updated. Reset intermediate measurements
             self.__intermediateMeasurements = []
 
     
 
-    def getRecentDataPoints(self, count):
-        return self.__aggregatedValues[-count:]
+    def getRecentDataPoints(self, timeframeName, count):
+        return self.__aggregationsPerTimeframe[timeframeName][-count:]

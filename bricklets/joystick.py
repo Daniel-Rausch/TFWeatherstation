@@ -30,6 +30,7 @@ class Joystick(Bricklet):
 
         self.__buttonPressedDuringLastTick = False
         self.__buttonPressedStartedAtTick = -1
+        self.__buttonLongPressWasRegisteredDuringThisPressPeriod = False
         self.__buttonPress = False
         self.__buttonLongPress = False
 
@@ -49,14 +50,16 @@ class Joystick(Bricklet):
                 logging.debug("Registered joystick button press.")
 
                 #Only store button press if long press wasn't already registered
-                if not self.__buttonLongPress:
+                if not self.__buttonLongPressWasRegisteredDuringThisPressPeriod:
                     self.__buttonPress = True
+                self.__buttonLongPressWasRegisteredDuringThisPressPeriod = False
             else:
                 self.__buttonPressedStartedAtTick = self._controller.currentTick
         
         #Check for long press
         if pressed and self._controller.currentTick >= self.__buttonPressedStartedAtTick + settings["TicksPerLongPress"]:
             self.__buttonLongPress = True
+            self.__buttonLongPressWasRegisteredDuringThisPressPeriod = True
 
         #process directional presses
         curPos = [self.__joystick.get_position().x, self.__joystick.get_position().y]
