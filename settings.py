@@ -1,4 +1,5 @@
 TICKS_PER_SECOND = 10
+TICKS_PER_MEASUREMENT = 1
 
 
 
@@ -25,17 +26,24 @@ settings = {
         "PressureMin" : 950, #hPa
         "PressureMax" : 1050,
     },
+    "DisplayTimeFrames": [
+        ("Seconds", 1), # Second component specifies the time in seconds.
+        ("Minutes", 60),
+        ("Hours", 60 * 60),
+        ("Days", 60 * 60 * 24),
+        ("Weeks", 60 * 60 * 24 * 7),
+    ],
 
     #Ticks
     "TicksPerSecond" : TICKS_PER_SECOND,
     "TotalTicks" : -1, #Negative for endless exectuion
 
     #Joystick
-    "TicksPerLongPress": TICKS_PER_SECOND*1, #Number of ticks after which joystick registers a long button press
+    "TicksPerLongPress": TICKS_PER_SECOND * 1, #Number of ticks after which joystick registers a long button press
 
     #Data model
-    "AggregationsPerDataPoint": TICKS_PER_SECOND,
-    "TicksPerMeasurement": 1,
+    "TicksPerMeasurement": TICKS_PER_MEASUREMENT,
+    "AggregationsPerDataPoint": int(TICKS_PER_SECOND/TICKS_PER_MEASUREMENT),
 
     "LoggingLevel" : "INFO",
 }

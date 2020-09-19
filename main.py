@@ -7,10 +7,6 @@ from tinkerforge.ip_connection import IPConnection
 import logging
 import time
 
-# import zipfile
-# import zlib
-
-
 from datahandler import Datahandler, DATATYPE
 from settings import settings
 
@@ -124,23 +120,3 @@ class Controller:
 if __name__ == "__main__":
     controller = Controller()
     controller.startStation()
-
-    # testdata = []
-
-    # for day in range(0,31):
-    #     for hour in range (0,24):
-    #         for minute in range (0,60):
-    #             #for second in range (0,60):
-    #             second = 0
-    #             i = second + 60 * minute + 60*60*hour + 60*60*24*day
-    #             testdata.append(f"{i}, {day}-{hour}-{minute}-{second}, {(1000.0 + i) % 1100}\n")
-    
-    # text = "".join(testdata)
-
-    # f = open("testfile.txt", "w")
-    # f.write(text)
-    # f.close()
-
-    # z = zipfile.ZipFile("testzip.zip", "w")
-    # z.writestr("testfile.txt", text, compress_type= zipfile.ZIP_DEFLATED)
-    # z.close()
