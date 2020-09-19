@@ -13,5 +13,18 @@ class Screen():
 
         logging.debug("Initializing new screen: "+ type(self).__name__)
 
+
+
     def update(self):
         logging.debug("Updating screen: " + type(self).__name__)
+
+
+
+    def _changeScreen(self, screen):
+        #Clear inputs
+        self._joystick.getButtonPress()
+        self._joystick.getButtonLongPress()
+        self._joystick.getDirInput()
+
+        #Set new screen
+        self._controller.currentScreen = screen

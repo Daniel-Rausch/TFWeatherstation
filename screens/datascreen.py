@@ -1,5 +1,6 @@
 from bricklets.joystick import DIR
 from screens.screen import Screen
+import screens.mainscreen as mainscreen
 from datahandler import DATATYPE
 from settings import settings
 
@@ -94,7 +95,8 @@ class DataScreen(Screen):
         #Process button press and directional inputs
         press = self._joystick.getButtonPress()
         if press:
-            pass
+            if self.__currentOption == 0:
+                self._changeScreen(mainscreen.MainScreen(self._controller))
         else:
             dirInput = self._joystick.getDirInput()
             if dirInput == DIR.LEFT:
