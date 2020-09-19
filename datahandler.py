@@ -102,12 +102,20 @@ class DataContainer():
             #Check whether intermediate aggregations can be combined into a new aggregated field
             #TODO needs some handling for overlapping cases where a timeframe was already initialized with partial data
             for [timeframeName, timeFrameDuration] in self.__timeframes:
-                lastTimeframe = 0
+                lastTimeframe = -1
                 if len(self.__aggregationsPerTimeframe[timeframeName]) > 0:
-                    lastTimeframe = self.__aggregationsPerTimeframe[timeframeName][-1][1]
-                currentTimeFrame = timestamp // timeFrameDuration
+                    lastTimeframe = int(self.__aggregationsPerTimeframe[timeframeName][-1][0] // timeFrameDuration)
+                currentTimeFrame = int(timestamp // timeFrameDuration)
 
+                #Timeframe has advanced, so data values for new timeframe need to be updated
                 if currentTimeFrame > lastTimeframe:
+
+                    #First check whether time frame has moved more than one step and, if so, add some none values
+                    diff = currentTimeFrame - lastTimeframe
+                    if lastTimeframe != -1 and diff > 1:
+                        for i in range(1, diff):
+                            self.__aggregationsPerTimeframe[timeframeName].append((int((lastTimeframe + i) * timeFrameDuration), None, 0))
+
                     #Special case: At the start of the measurements, the first aggregated value will be for currentTimeFrame. I.e., there are no previous values yet that can already be merged. So only merge if there are some previous values.
                     if self.__indexNextValueToBeMergedIntoTimeframe[timeframeName] != -1:
                         countToBeMerged = (len(self.__aggregatedValues) - 1) - self.__indexNextValueToBeMergedIntoTimeframe[timeframeName]
@@ -115,7 +123,7 @@ class DataContainer():
                         for (_, _, value) in self.__aggregatedValues[(-1 - countToBeMerged):-1]:
                             mergedValues += value
                         mergedValues /= countToBeMerged
-                        self.__aggregationsPerTimeframe[timeframeName].append((currentTimeFrame * timeFrameDuration, mergedValues, countToBeMerged)) #TODO: cannot simply append in case of gaps
+                        self.__aggregationsPerTimeframe[timeframeName].append((int(currentTimeFrame * timeFrameDuration), mergedValues, countToBeMerged))
                     
                     self.__indexNextValueToBeMergedIntoTimeframe[timeframeName] = len(self.__aggregatedValues) - 1
 

@@ -60,25 +60,25 @@ class DataScreen(Screen):
         #Build and display LCD Text
         text = ["","","",""]
         if self.__datatype == DATATYPE.TEMPERATURE:
-            if len(pureData) > 0:
+            if len(pureData) > 0 and pureData[-1] != None:
                 text[0] = "Temperature: {:5.1f}\xDFC".format(pureData[-1])
             else:
                 text[0] = "Temperature: {:>5}\xDFC".format("-.-")
             text[1] = "{:>8}".format("{}\xDFC".format(int(self.__lowerDisplayBound)))  + " to " + "{:>8}".format("{}\xDFC".format(int(self.__upperDisplayBound)))
         elif self.__datatype == DATATYPE.LIGHT:
-            if len(pureData) > 0:
+            if len(pureData) > 0 and pureData[-1] != None:
                 text[0] = "Light: {:10.1f} lx".format(pureData[-1])
             else:
                 text[0] = "Light: {:>10} lx".format("-.-")
             text[1] = "{:>8}".format("{} lx".format(int(self.__lowerDisplayBound)))  + " to " + "{:>8}".format("{} lx".format(int(self.__upperDisplayBound)))
         elif self.__datatype == DATATYPE.HUMIDITY:
-            if len(pureData) > 0:
+            if len(pureData) > 0 and pureData[-1] != None:
                 text[0] = "Humidity: {:8.1f} %".format(pureData[-1])
             else:
                 text[0] = "Humidity: {:>8} %".format("-.-")
             text[1] = "{:>8}".format("{} %".format(int(self.__lowerDisplayBound)))  + " to " + "{:>8}".format("{} %".format(int(self.__upperDisplayBound)))
         elif self.__datatype == DATATYPE.PRESSURE:
-            if len(pureData) > 0:
+            if len(pureData) > 0 and pureData[-1] != None:
                 text[0] = "Pressure: {:5d} hPa".format(int(pureData[-1]))
             else:
                 text[0] = "Pressure: {:>5} hPa".format("---")

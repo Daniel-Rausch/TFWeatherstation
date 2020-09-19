@@ -28,7 +28,7 @@ class OLED128x64(Bricklet):
         #Convert into pixel matrix. 0,0 is top left
         pixels = [[0] * self.WIDTH for _ in range(0, self.HEIGHT)]
         for i in range(-1, max(-len(data) - 1, -self.WIDTH - 1), -1):
-            if lowerBound <= data[i] < upperBound:
+            if data[i] != None and lowerBound <= data[i] < upperBound:
                 position = int((data[i] - lowerBound)/(upperBound-lowerBound)*self.HEIGHT) #Position counted from bottom
                 pixels[self.HEIGHT - 1 - position][self.WIDTH + i] = 1
         self.printPixelMatrix(pixels)

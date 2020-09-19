@@ -57,14 +57,15 @@ class MainScreen(Screen):
     def __processInputs(self):
         #Process button long press
         if self._joystick.getButtonLongPress():
-            if self.__currentOption == [0,1]:
-                self._controller.shutdown = True
+            pass
 
         #Process button press and directional inputs
         press = self._joystick.getButtonPress()
         if press:
             if self.__currentOption == [0,0]:
                 self._changeScreen(datascreen.DataScreen(self._controller, DATATYPE.TEMPERATURE))
+            elif self.__currentOption == [0,1]:
+                self._controller.shutdown = True
             elif self.__currentOption == [1,0]:
                 self._changeScreen(datascreen.DataScreen(self._controller, DATATYPE.LIGHT))
             elif self.__currentOption == [2,0]:
