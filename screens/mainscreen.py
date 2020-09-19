@@ -30,7 +30,6 @@ class MainScreen(Screen):
 
 
 
-
     def update(self):
         super().update()
 
@@ -44,7 +43,7 @@ class MainScreen(Screen):
                     "\x7E" if self.__currentOption == [row,0] else " ",
                     self.OPTIONS[row][0],
                     "\x7E" if self.__currentOption == [row,1] else " ",
-                    self.OPTIONS[row][1] if len(self.OPTIONS[row]) == 2 else ""
+                    self.OPTIONS[row][1]
                     )
                 text[row] = "{:1}{:8} {:1}{:9}".format(*formatStringInputs)
         self._lcd.displayText(text)
@@ -58,20 +57,19 @@ class MainScreen(Screen):
     def __processInputs(self):
         #Process button long press
         if self._joystick.getButtonLongPress():
-            pass
+            if self.__currentOption == [0,1]:
+                self._controller.shutdown = True
 
         #Process button press and directional inputs
         press = self._joystick.getButtonPress()
         if press:
             if self.__currentOption == [0,0]:
                 self._changeScreen(datascreen.DataScreen(self._controller, DATATYPE.TEMPERATURE))
-            elif self.__currentOption == [0,1]:
-                self._controller.shutdown = True
-            if self.__currentOption == [1,0]:
+            elif self.__currentOption == [1,0]:
                 self._changeScreen(datascreen.DataScreen(self._controller, DATATYPE.LIGHT))
-            if self.__currentOption == [2,0]:
+            elif self.__currentOption == [2,0]:
                 self._changeScreen(datascreen.DataScreen(self._controller, DATATYPE.HUMIDITY))
-            if self.__currentOption == [3,0]:
+            elif self.__currentOption == [3,0]:
                 self._changeScreen(datascreen.DataScreen(self._controller, DATATYPE.PRESSURE))
         else:
             dirInput = self._joystick.getDirInput()

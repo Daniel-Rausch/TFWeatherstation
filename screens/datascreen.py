@@ -76,7 +76,16 @@ class DataScreen(Screen):
                 text[0] = "Pressure: {:>5} hPa".format("---")
             text[1] = "{:>8}".format("{} hPa".format(int(self.__lowerDisplayBound)))  + " to " + "{:>8}".format("{} hPa".format(int(self.__upperDisplayBound)))
         text[2] = self.__clock.getDateTime().strftime("%y-%m-%d") + " to " + self.__clock.getDateTime().strftime("%y-%m-%d")
-        text[3] = "\x7F {:^8} \x7E".format(self.OPTIONS[self.__currentOption])
+        #text[3] = "\x7F {:^8} \x7E".format(self.OPTIONS[self.__currentOption])
+        formatStringData = (
+            "\x7E" if self.__currentOption == 0 else "",
+            self.OPTIONS[0],
+            "\x7E" if self.__currentOption == 1 else "",
+            self.OPTIONS[1],
+            "\x7E" if self.__currentOption == 2 else "",
+            self.OPTIONS[2]
+        )
+        text[3] = "{:1}{} {:1}{} {:1}{}".format(*formatStringData)
 
         self._lcd.displayText(text)
 
