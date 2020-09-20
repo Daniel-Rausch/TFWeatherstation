@@ -65,7 +65,7 @@ class DataScreen(Screen):
             self.__displayLCDTextModeRange(data)
 
         #Display OLED data
-        self._oled.displayDatapoints(pureData, self.__lowerDisplayBound, self.__upperDisplayBound)
+        self._oled.displayDatapoints(pureData, self.__lowerDisplayBound, self.__upperDisplayBound, settings["DisplayBorderForGraph"])
 
 
 

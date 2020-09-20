@@ -29,11 +29,13 @@ settings = {
     "DisplayTimeframes": [ # Second component specifies the time in seconds.
         ("Seconds", 1), 
         ("Minutes", 60),
+        ("15 Minutes", 60*15),
         ("Hours", 60 * 60),
         ("Days", 60 * 60 * 24),
         ("Weeks", 60 * 60 * 24 * 7),
     ],
     "DefaultDisplayTimeframe": 0, # Index that determines which of the above timeframes is the default
+    "DisplayBorderForGraph": True,
 
     #Ticks
     "TicksPerSecond" : TICKS_PER_SECOND,
