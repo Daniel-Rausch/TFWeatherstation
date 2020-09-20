@@ -75,10 +75,10 @@ class MainScreen(Screen):
         else:
             dirInput = self._joystick.getDirInput()
             if dirInput == DIR.LEFT:
-                self.__currentOption[1] = (self.__currentOption[1] - 1)
+                self.__currentOption[1] = (self.__currentOption[1] - 1) % 2
                 self.__currentOption[0] %= self.OPTIONS_PER_COLUMN[self.__currentOption[1]]
             elif dirInput == DIR.RIGHT:
-                self.__currentOption[1] = (self.__currentOption[1] + 1)
+                self.__currentOption[1] = (self.__currentOption[1] + 1) % 2
                 self.__currentOption[0] %= self.OPTIONS_PER_COLUMN[self.__currentOption[1]]
             elif dirInput == DIR.UP:
                 self.__currentOption[0] = (self.__currentOption[0] - 1) % self.OPTIONS_PER_COLUMN[self.__currentOption[1]]

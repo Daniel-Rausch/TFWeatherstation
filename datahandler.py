@@ -12,6 +12,15 @@ class DATATYPE(Enum):
 
 
 
+DATATYPE_STRING_MAPPING = {
+    DATATYPE.TEMPERATURE : "Temperature",
+    DATATYPE.LIGHT : "Light",
+    DATATYPE.HUMIDITY : "Humidity",
+    DATATYPE.PRESSURE : "Pressure",
+}
+
+
+
 class Datahandler():
 
     def __init__(self, controller):

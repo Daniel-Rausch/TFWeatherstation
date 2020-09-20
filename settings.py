@@ -17,14 +17,30 @@ settings = {
 
     #Display
     "DisplayDefaultBounds": {
-        "TemperatureMin" : 20, #celsius
-        "TemperatureMax" : 30,
+        "TemperatureMin" : 13, #celsius
+        "TemperatureMax" : 28,
         "LightMin" : 0, #lux
         "LightMax" : 100,
         "HumidityMin" : 0, #percent
         "HumidityMax" : 100,
         "PressureMin" : 950, #hPa
         "PressureMax" : 1050,
+    },
+    "DisplayExtremeBounds": {
+        "TemperatureMin" : -20, #celsius
+        "TemperatureMax" : 40,
+        "LightMin" : 0, #lux
+        "LightMax" : 10000,
+        "HumidityMin" : 0, #percent
+        "HumidityMax" : 100,
+        "PressureMin" : 0, #hPa
+        "PressureMax" : 2000,
+    },
+    "DisplayBoundStepSize": {
+        "Temperature" : 1, #celsius
+        "Light" : 10, #lux
+        "Humidity" : 1, #percent
+        "Pressure" : 10, #hPa
     },
     "DisplayTimeframes": [ # Second component specifies the time in seconds.
         ("Seconds", 1), 
