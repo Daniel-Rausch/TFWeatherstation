@@ -1,6 +1,7 @@
 from bricklets.joystick import DIR
 from screens.screen import Screen
 import screens.datascreen as datascreen
+import screens.shutdownscreen as shutdownscreen
 from datahandler import DATATYPE
 from settings import settings
 
@@ -65,7 +66,7 @@ class MainScreen(Screen):
             if self.__currentOption == [0,0]:
                 self._changeScreen(datascreen.DataScreen(self._controller, DATATYPE.TEMPERATURE))
             elif self.__currentOption == [0,1]:
-                self._controller.shutdown = True
+                self._changeScreen(shutdownscreen.ShutdownScreen(self._controller))
             elif self.__currentOption == [1,0]:
                 self._changeScreen(datascreen.DataScreen(self._controller, DATATYPE.LIGHT))
             elif self.__currentOption == [2,0]:
