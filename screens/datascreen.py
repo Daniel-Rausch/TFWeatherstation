@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 
 from bricklets.joystick import DIR
+from bricklets.oled128x64 import OLED128x64
 from screens.screen import Screen
 import screens.mainscreen as mainscreen
 from datahandler import DATATYPE
@@ -16,7 +17,7 @@ class DataScreen(Screen):
         "Bounds"
     )
 
-    WIDTH_OF_GRAPH = 128
+    WIDTH_OF_GRAPH = OLED128x64.WIDTH - 2 * int(settings["DisplayBorderForGraph"])
 
 
 
@@ -44,6 +45,7 @@ class DataScreen(Screen):
 
         self.__timeframes = settings["DisplayTimeframes"]
         self.__currentTimeframeType = settings["DefaultDisplayTimeframe"]
+        self.__currentTimeframeOffset = 0
 
 
 
@@ -53,7 +55,7 @@ class DataScreen(Screen):
 
         self.__processInputs()
 
-        data = self.__datahandler.getRecentDataPoints(self.__datatype, self.__timeframes[self.__currentTimeframeType][0], self.WIDTH_OF_GRAPH)
+        data = self.__datahandler.getRecentDataPoints(self.__datatype, self.__timeframes[self.__currentTimeframeType][0], self.WIDTH_OF_GRAPH, self.__currentTimeframeOffset)
         pureData = []
         for (_, value, _) in data:
             pureData.append(value)
@@ -108,10 +110,19 @@ class DataScreen(Screen):
                 dirInput = self._joystick.getDirInput()
                 if dirInput == DIR.UP:
                     self.__currentOption = (self.__currentOption - 1)%len(self.__timeframes)
+                    timeratio = self.__timeframes[self.__currentTimeframeType][1] / self.__timeframes[self.__currentOption][1]
                     self.__currentTimeframeType = self.__currentOption
+                    self.__currentTimeframeOffset = int(self.__currentTimeframeOffset * timeratio)
                 elif dirInput == DIR.DOWN:
                     self.__currentOption = (self.__currentOption + 1)%len(self.__timeframes)
+                    timeratio = self.__timeframes[self.__currentTimeframeType][1] / self.__timeframes[self.__currentOption][1]
                     self.__currentTimeframeType = self.__currentOption
+                    self.__currentTimeframeOffset = int(self.__currentTimeframeOffset * timeratio)
+                elif dirInput == DIR.LEFT:
+                    maxOffset = max (0, self.__datahandler.getTotalNumberOfDataPoints(self.__datatype, self.__timeframes[self.__currentTimeframeType][0]) - 1 - self.WIDTH_OF_GRAPH)
+                    self.__currentTimeframeOffset = min(self.__currentTimeframeOffset + settings["DisplayMoveRangeStepSize"], maxOffset)
+                elif dirInput == DIR.RIGHT:
+                    self.__currentTimeframeOffset = max(self.__currentTimeframeOffset - settings["DisplayMoveRangeStepSize"], 0)
 
     
 
@@ -169,7 +180,10 @@ class DataScreen(Screen):
         if len(data) >= 1:
             currentTime = datetime.fromtimestamp(data[-1][0])
             initialTime = currentTime - timedelta(seconds= self.__timeframes[self.__currentTimeframeType][1] * self.WIDTH_OF_GRAPH)
-            text[1] = initialTime.strftime("%y-%m-%d") + " to " + currentTime.strftime("%y-%m-%d")
+            if self.__currentTimeframeOffset == 0:
+                text[1] = initialTime.strftime("%y-%m-%d") + " to " + "{:8}".format("now")
+            else:
+                text[1] = initialTime.strftime("%y-%m-%d") + " to " + currentTime.strftime("%y-%m-%d")
 
         offset = max(0, self.__currentOption-1)
         for i in range(0,2):

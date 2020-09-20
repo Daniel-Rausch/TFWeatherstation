@@ -36,6 +36,7 @@ settings = {
     ],
     "DefaultDisplayTimeframe": 0, # Index that determines which of the above timeframes is the default
     "DisplayBorderForGraph": True,
+    "DisplayMoveRangeStepSize" : 10,  #How many timeframes/pixels are moved to the left or right while moving the graph?
 
     #Ticks
     "TicksPerSecond" : TICKS_PER_SECOND,

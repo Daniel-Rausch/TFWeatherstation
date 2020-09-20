@@ -33,8 +33,13 @@ class Datahandler():
 
     
 
-    def getRecentDataPoints(self, datatype, timeframeName, count): #Returns array containing values (timestamp, value, numAggregations)
-        return self.__datacontainer[datatype].getRecentDataPoints(timeframeName, count)
+    def getRecentDataPoints(self, datatype, timeframeType, count, offset): #Returns array containing values (timestamp, value, numAggregations)
+        return self.__datacontainer[datatype].getRecentDataPoints(timeframeType, count, offset)
+
+    
+
+    def getTotalNumberOfDataPoints(self, datatype, timeframeType):
+        return self.__datacontainer[datatype].getTotalNumberOfDataPoints(timeframeType)
 
 
 
@@ -132,5 +137,11 @@ class DataContainer():
 
     
 
-    def getRecentDataPoints(self, timeframeName, count):
-        return self.__aggregationsPerTimeframe[timeframeName][-count:]
+    def getRecentDataPoints(self, timeframeName, count, offset):
+        length = len(self.__aggregationsPerTimeframe[timeframeName])
+        return self.__aggregationsPerTimeframe[timeframeName][max(length - count - offset, 0) : max(length - offset, 0)]
+
+    
+
+    def getTotalNumberOfDataPoints(self, timeframeName):
+        return len(self.__aggregationsPerTimeframe[timeframeName])
