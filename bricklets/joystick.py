@@ -35,11 +35,14 @@ class Joystick(Bricklet):
         self.__buttonLongPress = False
 
         self.__lastDir = DIR.CENTER
+        self.__dirInputStartedAtTick = -1
         self.__dirInput = None
 
 
 
     def update(self):
+        currentTick = self._controller.currentTick
+
         #Process button press
         pressed = self.__joystick.is_pressed()
 
@@ -54,23 +57,34 @@ class Joystick(Bricklet):
                     self.__buttonPress = True
                 self.__buttonLongPressWasRegisteredDuringThisPressPeriod = False
             else:
-                self.__buttonPressedStartedAtTick = self._controller.currentTick
+                self.__buttonPressedStartedAtTick = currentTick
         
+
+
         #Check for long press
         if pressed and self._controller.currentTick >= self.__buttonPressedStartedAtTick + settings["TicksPerLongPress"]:
             self.__buttonLongPress = True
             self.__buttonLongPressWasRegisteredDuringThisPressPeriod = True
+
+
 
         #process directional presses
         curPos = [self.__joystick.get_position().x, self.__joystick.get_position().y]
         curDir = self.__mapPosToDir(curPos, 0)
         curDirPadded = self.__mapPosToDir(curPos, self.DIR_INPUT_MARGIN)
         if curDir == self.__lastDir:
-            #No change of direction
-            pass
+            #No change of direction. Process multi presses
+            if settings["TicksBeforeRepeatedDirectionalPresses"] >= 0 and not curDir == DIR.CENTER:
+                #Check whether minimum delay for repeated presses has passed
+                if currentTick >= self.__dirInputStartedAtTick + settings["TicksBeforeRepeatedDirectionalPresses"]:
+                    #Check whether the current tick must generated a repeated press
+                    if ((currentTick - (self.__dirInputStartedAtTick + settings["TicksBeforeRepeatedDirectionalPresses"])) % settings["TicksPerRepeatedDirectionalPress"]) == 0:
+                        self.__dirInput = curDir
+
         elif(curDirPadded != DIR.CENTER):
             #Change direction and queue input
             logging.debug("Registered joystick direction: " + str(curDirPadded.name))
+            self.__dirInputStartedAtTick = currentTick
             self.__lastDir = curDirPadded
             self.__dirInput = curDirPadded
         else:

@@ -60,6 +60,8 @@ settings = {
 
     #Joystick
     "TicksPerLongPress": TICKS_PER_SECOND * 1, #Number of ticks after which joystick registers a long button press
+    "TicksBeforeRepeatedDirectionalPresses": 5, #Negative to disable multiple direction presses
+    "TicksPerRepeatedDirectionalPress": 2,
 
     #Data model
     "TicksPerMeasurement": TICKS_PER_MEASUREMENT,
