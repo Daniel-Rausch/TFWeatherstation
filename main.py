@@ -97,7 +97,7 @@ class Controller:
 
             #Automatic data saving
             if settings["AutomaticSaveInterval"] > 0 and (self.currentTick % settings["AutomaticSaveInterval"]) == 0 and not self.currentTick == 0:
-                logging.info("Autosaving data")
+                logging.info("Autosaving data at time " + str(self.bricklets["clock"].getDateTime()))
                 self.datahandler.writeRecentDataToFile()
 
             #Sleep until the next tick can occur
