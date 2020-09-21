@@ -127,8 +127,8 @@ class Datahandler():
         if not self.__initialized:
             return
         
-        # for container in self.__datacontainer.values():
-            # container.writeRecentDataToFile()
+        for container in self.__datacontainer.values():
+            container.writeRecentDataToFile()
 
 
 
@@ -304,3 +304,4 @@ class DataContainer():
             for i in range(self.__indexLastWrittenToFile, len(self.__aggregatedValues)):
                 (identifier, timestamp, value) = self.__aggregatedValues[i]
                 f.write(f"{identifier},{timestamp},{value}\n")
+        self.__indexLastWrittenToFile = len(self.__aggregatedValues) - 1

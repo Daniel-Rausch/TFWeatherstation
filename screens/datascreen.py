@@ -125,7 +125,7 @@ class DataScreen(Screen):
                     self.__currentTimeframeType = self.__currentOption
                     self.__currentTimeframeOffset = int(self.__currentTimeframeOffset * timeratio)
                 elif dirInput == DIR.LEFT:
-                    maxOffset = max (0, self.__datahandler.getTotalNumberOfDataPoints(self.__datatype, self.__timeframes[self.__currentTimeframeType][0]) - 1 - self.WIDTH_OF_GRAPH)
+                    maxOffset = max (0, self.__datahandler.getTotalNumberOfDataPoints(self.__datatype, self.__timeframes[self.__currentTimeframeType][0]) - 1)
                     self.__currentTimeframeOffset = min(self.__currentTimeframeOffset + self.__displayMoveRangeStepSize, maxOffset)
                 elif dirInput == DIR.RIGHT:
                     self.__currentTimeframeOffset = max(self.__currentTimeframeOffset - self.__displayMoveRangeStepSize, 0)
