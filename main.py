@@ -6,6 +6,7 @@ from tinkerforge.ip_connection import IPConnection
 
 import logging
 import time
+import os
 
 from datahandler import Datahandler, DATATYPE
 from settings import settings
@@ -36,6 +37,7 @@ class Controller:
         self.ipcon = None
         self.currentTick = 0
         self.shutdown = False
+        self.shutdownSystem = False
 
         #Ensure that there is ever only a single controller instance
         if not Controller.mainController == "":
@@ -71,7 +73,6 @@ class Controller:
         self.datahandler = Datahandler(self)
 
         #Initialize main screen
-        #self.currentScreen = DataScreen(self, DATATYPE.PRESSURE)
         self.currentScreen = MainScreen(self)
 
         logging.info("Finished controller Initiatilization at time " + str(self.bricklets["clock"].getDateTime()))
@@ -110,6 +111,9 @@ class Controller:
             bricklet.shutdown()
         self.datahandler.shutdown()
         self.ipcon.disconnect()
+
+        if self.shutdownSystem and os.name == "posix":
+            os.system("sudo shutdown -h now")
 
 
 

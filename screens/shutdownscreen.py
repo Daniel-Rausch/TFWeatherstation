@@ -54,7 +54,8 @@ class ShutdownScreen(Screen):
             elif self.__currentOption == 1:
                 self._controller.shutdown = True
             elif self.__currentOption == 2:
-                self._controller.shutdown = True #TODO shutdown full system
+                self._controller.shutdown = True
+                self._controller.shutdownSystem = True
         else:
             dirInput = self._joystick.getDirInput()
             if dirInput == DIR.UP:
