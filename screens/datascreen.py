@@ -39,6 +39,7 @@ class DataScreen(Screen):
 
         self.__timeframes = settings["DisplayTimeframes"]
         self.__currentTimeframeType = settings["DefaultDisplayTimeframe"]
+        self.__displayMoveRangeStepSize = settings["DisplayMoveRangeStepSize"]
         self.__currentTimeframeOffset = 0
 
 
@@ -125,9 +126,9 @@ class DataScreen(Screen):
                     self.__currentTimeframeOffset = int(self.__currentTimeframeOffset * timeratio)
                 elif dirInput == DIR.LEFT:
                     maxOffset = max (0, self.__datahandler.getTotalNumberOfDataPoints(self.__datatype, self.__timeframes[self.__currentTimeframeType][0]) - 1 - self.WIDTH_OF_GRAPH)
-                    self.__currentTimeframeOffset = min(self.__currentTimeframeOffset + settings["DisplayMoveRangeStepSize"], maxOffset)
+                    self.__currentTimeframeOffset = min(self.__currentTimeframeOffset + self.__displayMoveRangeStepSize, maxOffset)
                 elif dirInput == DIR.RIGHT:
-                    self.__currentTimeframeOffset = max(self.__currentTimeframeOffset - settings["DisplayMoveRangeStepSize"], 0)
+                    self.__currentTimeframeOffset = max(self.__currentTimeframeOffset - self.__displayMoveRangeStepSize, 0)
 
             elif self.__currentMode == self.OPTIONS[2]:
                 #Currently selecting Bounds
@@ -209,7 +210,7 @@ class DataScreen(Screen):
                 text[1] = initialTime.strftime("%y-%m-%d") + " to " + currentTime.strftime("%y-%m-%d")
 
         offset = max(0, self.__currentOption-1)
-        for i in range(0,2):
+        for i in range(0, min(2, len(self.__timeframes))):
             text[i+2] = "{:1}{:19}".format(
                 "\x7E" if self.__currentOption == i + offset else "",
                 self.__timeframes[i + offset][0]

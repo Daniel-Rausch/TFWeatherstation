@@ -1,8 +1,6 @@
 from bricklets.joystick import DIR
 from screens.screen import Screen
 import screens.mainscreen as mainscreen
-from datahandler import DATATYPE
-from settings import settings
 
 
 

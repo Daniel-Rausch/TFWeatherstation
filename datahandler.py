@@ -25,16 +25,32 @@ class Datahandler():
 
     def __init__(self, controller):
         self.__controller = controller
+        self.__initialized = False
 
         self.__datacontainer = {}
         for datatype in DATATYPE:
             self.__datacontainer[datatype] = DataContainer(self.__controller, datatype)
 
-        logging.info("Initializing: "+ type(self).__name__)
+        logging.info("Creating: "+ type(self).__name__)
+    
+
+    
+    def initializeDB(self, id): #ID is integer. -1 for new database creation, otherwise an existing one with that ID is loaded.
+        logging.info(f"Started DB (ID: {id}) initialization at time " + str(self.__controller.bricklets["clock"].getDateTime()))
+
+        for container in self.__datacontainer.values():
+            container.initializeData()
+
+        self.__initialized = True
+
+        logging.info(f"Finished DB  (ID: {id}) initialization at time " + str(self.__controller.bricklets["clock"].getDateTime()))
 
 
 
     def update(self):
+        if not self.__initialized:
+            return
+
         if self.__controller.currentTick % settings["TicksPerMeasurement"] == 0:
             for datacontainer in self.__datacontainer.values():
                 datacontainer.performMeasurement()
@@ -43,17 +59,28 @@ class Datahandler():
     
 
     def getRecentDataPoints(self, datatype, timeframeType, count, offset): #Returns array containing values (timestamp, value, numAggregations)
+        if not self.__initialized:
+            return []
+
         return self.__datacontainer[datatype].getRecentDataPoints(timeframeType, count, offset)
 
     
 
     def getTotalNumberOfDataPoints(self, datatype, timeframeType):
+        if not self.__initialized:
+            return 0
+
         return self.__datacontainer[datatype].getTotalNumberOfDataPoints(timeframeType)
 
 
 
     def shutdown(self):
         logging.info("Shutdown: "+ type(self).__name__)
+        
+        if not self.__initialized:
+            return
+        
+        #TODO
 
 
 
@@ -84,11 +111,11 @@ class DataContainer():
         self.__aggregationsPerTimeframe = {} # Dict of different time frames. each entry is an array of values (timestamp, value, numAggregations)
         self.__indexNextValueToBeMergedIntoTimeframe = {} # Dict of different time frames. Each entry is an integer denoting the first position from __aggregatedValues that still needs to be merged into __aggregationsPerTimeframe
 
-        self.__initiateData()
+        #self.initiateData()
 
 
 
-    def __initiateData(self):
+    def initializeData(self):
         for [timeframeName, _ ] in self.__timeframes:
             self.__aggregationsPerTimeframe[timeframeName] = []
             self.__indexNextValueToBeMergedIntoTimeframe[timeframeName] = -1

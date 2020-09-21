@@ -20,7 +20,7 @@ from bricklets.lcd20x4 import LCD20x4
 from bricklets.oled128x64 import OLED128x64
 from bricklets.joystick import Joystick
 
-from screens.mainscreen import MainScreen
+from screens.startscreen import StartScreen
 
 
 
@@ -36,6 +36,7 @@ class Controller:
 
         self.ipcon = None
         self.currentTick = 0
+        self.DBInitialized = False #Will be set by the initializeDB() function, which is called via the startscreen
         self.shutdown = False
         self.shutdownSystem = False
 
@@ -69,11 +70,11 @@ class Controller:
         self.bricklets["oled128x64"] = OLED128x64(self)
         self.bricklets["joystick"] = Joystick(self)
 
-        #Initialize data handler
+        #Create data handler (will be initialized by the initializeDB() function)
         self.datahandler = Datahandler(self)
 
-        #Initialize main screen
-        self.currentScreen = MainScreen(self)
+        #Initialize starting screen
+        self.currentScreen = StartScreen(self)
 
         logging.info("Finished controller Initiatilization at time " + str(self.bricklets["clock"].getDateTime()))
 
