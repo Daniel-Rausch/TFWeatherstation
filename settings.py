@@ -66,6 +66,8 @@ settings = {
     #Data model
     "TicksPerMeasurement": TICKS_PER_MEASUREMENT,
     "AggregationsPerDataPoint": int(TICKS_PER_SECOND/TICKS_PER_MEASUREMENT),
+    "DBPath": "data",
+    "DBFolderFormatstring": "db-{:d}",
 
     "LoggingLevel" : "INFO",
 }

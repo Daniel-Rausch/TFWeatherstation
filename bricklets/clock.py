@@ -17,4 +17,4 @@ class Clock(Bricklet):
         return datetime(year, month, day, hour, minute, second, centisecond*10*1000)
 
     def getTimestamp(self): #returns posix timestamp, i.e., seconds since 1.1.1970
-        return self.getDateTime().timestamp()
+        return int(self.getDateTime().timestamp())

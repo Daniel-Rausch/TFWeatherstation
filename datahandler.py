@@ -1,5 +1,6 @@
 import logging
 from enum import Enum
+import os
 
 from settings import settings
 
@@ -21,10 +22,24 @@ DATATYPE_STRING_MAPPING = {
 
 
 
+DATATYPE_SHORTSTRING_MAPPING = {
+    DATATYPE.TEMPERATURE : "temp",
+    DATATYPE.LIGHT : "light",
+    DATATYPE.HUMIDITY : "humid",
+    DATATYPE.PRESSURE : "press",
+}
+
+
+
+DB_HEADER = "version,creation date\n1,{}\nid,posix timestamp,value\n"
+
+
+
 class Datahandler():
 
     def __init__(self, controller):
         self.__controller = controller
+        self.__DBid = -1
         self.__initialized = False
 
         self.__datacontainer = {}
@@ -35,15 +50,47 @@ class Datahandler():
     
 
     
-    def initializeDB(self, id): #ID is integer. -1 for new database creation, otherwise an existing one with that ID is loaded.
-        logging.info(f"Started DB (ID: {id}) initialization at time " + str(self.__controller.bricklets["clock"].getDateTime()))
+    def initializeDB(self, DBid): #DBid is integer. -1 for new database creation, otherwise an existing one with that ID is loaded.
+        logging.info(f"Started DB (ID: {DBid}) initialization at time " + str(self.__controller.bricklets["clock"].getDateTime()))
 
+        #New DB: set id to first unused integer
+        if DBid < 0:
+            self.__DBid = self.getExistingDBCount()
+        else:
+            self.__DBid = DBid
+
+        #Create DB if non existant
+        if not os.path.exists(settings["DBPath"]):
+            os.mkdir(settings["DBPath"])
+        if not os.path.exists(settings["DBPath"] + "/" + settings["DBFolderFormatstring"].format(self.__DBid)):
+            os.mkdir(settings["DBPath"] + "/" + settings["DBFolderFormatstring"].format(self.__DBid))
+        for shortstring in DATATYPE_SHORTSTRING_MAPPING.values():
+            file = settings["DBPath"] + "/" + settings["DBFolderFormatstring"].format(self.__DBid) + "/" + shortstring + ".csv"
+            if not os.path.exists(file):
+                with open(file, "w") as f:
+                    f.write(DB_HEADER.format(self.__controller.bricklets["clock"].getDateTime()))
+
+        #Initialize each of the containers
         for container in self.__datacontainer.values():
-            container.initializeData()
+            container.initializeData(self.__DBid)
 
         self.__initialized = True
 
-        logging.info(f"Finished DB  (ID: {id}) initialization at time " + str(self.__controller.bricklets["clock"].getDateTime()))
+        logging.info(f"Finished DB  (ID: {DBid} --> {self.__DBid}) initialization at time " + str(self.__controller.bricklets["clock"].getDateTime()))
+
+    
+
+    def getExistingDBCount(self):
+        if not os.path.exists(settings["DBPath"]):
+            return 0
+        else:
+            i = 0
+            while True:
+                if os.path.exists(settings["DBPath"] + "/" + settings["DBFolderFormatstring"].format(i)):
+                    i += 1
+                else:
+                    break
+            return i
 
 
 
@@ -80,7 +127,11 @@ class Datahandler():
         if not self.__initialized:
             return
         
-        #TODO
+        # for container in self.__datacontainer.values():
+            # container.writeRecentDataToFile()
+
+
+
 
 
 
@@ -91,6 +142,7 @@ class DataContainer():
     def __init__(self, controller, datatype):
         self.__controller = controller
         self.__datatype = datatype
+        self.__DBid = -1
         self.__clock = self.__controller.bricklets["clock"]
 
         if self.__datatype == DATATYPE.TEMPERATURE:
@@ -106,19 +158,81 @@ class DataContainer():
 
         self.__intermediateMeasurements = []
 
-        self.__valueID = 0
+        self.__nextID = 0
         self.__aggregatedValues = [] # Format is (id, timestamp, value)
-        self.__aggregationsPerTimeframe = {} # Dict of different time frames. each entry is an array of values (timestamp, value, numAggregations)
+        self.__aggregationsPerTimeframe = {} # Dict of different time frames. each entry is an array of values (timestamp, value, numAggregations), where timestamp is the first timeunit in that frame
         self.__indexNextValueToBeMergedIntoTimeframe = {} # Dict of different time frames. Each entry is an integer denoting the first position from __aggregatedValues that still needs to be merged into __aggregationsPerTimeframe
 
-        #self.initiateData()
+        self.__indexLastWrittenToFile = 0
 
 
 
-    def initializeData(self):
+    def initializeData(self, DBid):
+        self.__DBid = DBid
+        self.__DBfile = settings["DBPath"] + "/" + settings["DBFolderFormatstring"].format(self.__DBid) + "/" + DATATYPE_SHORTSTRING_MAPPING[self.__datatype] + ".csv"
+
         for [timeframeName, _ ] in self.__timeframes:
             self.__aggregationsPerTimeframe[timeframeName] = []
             self.__indexNextValueToBeMergedIntoTimeframe[timeframeName] = -1
+
+        #Read previous values from DB
+        pastValues = []
+        linecounter = 0
+        with open(self.__DBfile, "r") as f:
+            for line in f.readlines():
+                line = line.rstrip("\n")
+
+                #First 3 lines are header info. Skip those
+                if linecounter < 3:
+                    linecounter +=1
+                    continue
+
+                entry = line.split(",")
+                pastValues.append(entry)
+        
+
+        if len(pastValues) > 0:
+            #Set variables
+            self.__nextID = int(pastValues[-1][0]) + 1
+
+
+            #Compute timeframes from previous values
+            initialTimestamp = int(pastValues[0][1])
+            initialTimeframe = {}
+            prevTimeframe = {}
+            for [timeframeName, timeframeDuration] in self.__timeframes:
+                initialTimeframe[timeframeName] = int(initialTimestamp // timeframeDuration)
+                prevTimeframe[timeframeName] = initialTimeframe[timeframeName]-1
+
+            for i in range(0, len(pastValues)):
+                (_, timestamp, value) = pastValues[i]
+                timestamp = int(timestamp)
+                value = float(value)
+                for [timeframeName, timeframeDuration] in self.__timeframes:
+                    currentTimeframe = int(timestamp // timeframeDuration)
+                    diff = currentTimeframe - prevTimeframe[timeframeName]
+                    
+                    #Check whether time frame has moved more than one step and, if so, add some none values
+                    if diff > 1:
+                        for i in range(1, diff):
+                            self.__aggregationsPerTimeframe[timeframeName].append([int((prevTimeframe[timeframeName] + i) * timeframeDuration), None, 0])
+                    
+                    #Check whether the current datapoint creates a new entry
+                    if diff >= 1:
+                        self.__aggregationsPerTimeframe[timeframeName].append([int(currentTimeframe * timeframeDuration), value, 1])
+                    else:
+                        self.__aggregationsPerTimeframe[timeframeName][-1][1] += value
+                        self.__aggregationsPerTimeframe[timeframeName][-1][2] += 1
+                    
+                    prevTimeframe[timeframeName] = currentTimeframe
+            
+            #Compute averages for the timeframe values from above
+            for [timeframeName, _] in self.__timeframes:
+                for i in range(0, len(self.__aggregationsPerTimeframe[timeframeName])):
+                    if self.__aggregationsPerTimeframe[timeframeName][i][2] > 1:
+                        self.__aggregationsPerTimeframe[timeframeName][i][1] /= self.__aggregationsPerTimeframe[timeframeName][i][2]
+
+
 
 
 
@@ -137,25 +251,26 @@ class DataContainer():
             average /= len(self.__intermediateMeasurements)
 
             timestamp = self.__clock.getTimestamp()
-            self.__aggregatedValues.append((id, timestamp, average))
+            self.__aggregatedValues.append((self.__nextID, timestamp, average))
+            self.__nextID += 1
                 
 
             #Check whether intermediate aggregations can be combined into a new aggregated field
             #TODO needs some handling for overlapping cases where a timeframe was already initialized with partial data
-            for [timeframeName, timeFrameDuration] in self.__timeframes:
+            for [timeframeName, timeframeDuration] in self.__timeframes:
                 lastTimeframe = -1
                 if len(self.__aggregationsPerTimeframe[timeframeName]) > 0:
-                    lastTimeframe = int(self.__aggregationsPerTimeframe[timeframeName][-1][0] // timeFrameDuration)
-                currentTimeFrame = int(timestamp // timeFrameDuration)
+                    lastTimeframe = int(self.__aggregationsPerTimeframe[timeframeName][-1][0] // timeframeDuration)
+                currentTimeframe = int(timestamp // timeframeDuration)
 
                 #Timeframe has advanced, so data values for new timeframe need to be updated
-                if currentTimeFrame > lastTimeframe:
+                if currentTimeframe > lastTimeframe:
 
                     #First check whether time frame has moved more than one step and, if so, add some none values
-                    diff = currentTimeFrame - lastTimeframe
+                    diff = currentTimeframe - lastTimeframe
                     if lastTimeframe != -1 and diff > 1:
                         for i in range(1, diff):
-                            self.__aggregationsPerTimeframe[timeframeName].append((int((lastTimeframe + i) * timeFrameDuration), None, 0))
+                            self.__aggregationsPerTimeframe[timeframeName].append([int((lastTimeframe + i) * timeframeDuration), None, 0])
 
                     #Special case: At the start of the measurements, the first aggregated value will be for currentTimeFrame. I.e., there are no previous values yet that can already be merged. So only merge if there are some previous values.
                     if self.__indexNextValueToBeMergedIntoTimeframe[timeframeName] != -1:
@@ -164,7 +279,7 @@ class DataContainer():
                         for (_, _, value) in self.__aggregatedValues[(-1 - countToBeMerged):-1]:
                             mergedValues += value
                         mergedValues /= countToBeMerged
-                        self.__aggregationsPerTimeframe[timeframeName].append((int(currentTimeFrame * timeFrameDuration), mergedValues, countToBeMerged))
+                        self.__aggregationsPerTimeframe[timeframeName].append([int(currentTimeframe * timeframeDuration), mergedValues, countToBeMerged])
                     
                     self.__indexNextValueToBeMergedIntoTimeframe[timeframeName] = len(self.__aggregatedValues) - 1
 
@@ -181,3 +296,11 @@ class DataContainer():
 
     def getTotalNumberOfDataPoints(self, timeframeName):
         return len(self.__aggregationsPerTimeframe[timeframeName])
+    
+
+
+    def writeRecentDataToFile(self):
+        with open(self.__DBfile, "a") as f:
+            for i in range(self.__indexLastWrittenToFile, len(self.__aggregatedValues)):
+                (identifier, timestamp, value) = self.__aggregatedValues[i]
+                f.write(f"{identifier},{timestamp},{value}\n")

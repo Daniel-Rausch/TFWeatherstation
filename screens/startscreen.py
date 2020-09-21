@@ -12,7 +12,9 @@ class StartScreen(Screen):
         self.__currentOption = 0
 
         self.__options = ["New"]
-        #TODO
+        dbcount = self._controller.datahandler.getExistingDBCount()
+        for i in range(0, dbcount):
+            self.__options.append(("DB #{:0" + str(len(str(dbcount))) + "d}").format(i))
 
         if len(self.__options) >= 2:
             self.__currentOption = 1 #Start default option with the first existing database, if any
