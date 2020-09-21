@@ -84,6 +84,8 @@ class Controller:
 
         while (self.currentTick < settings["TotalTicks"] or settings["TotalTicks"] < 0) and not self.shutdown:
 
+            starttime = time.time()
+
             #Update data handler
             self.datahandler.update()
 
@@ -95,8 +97,12 @@ class Controller:
 
             #Sleep until the next tick can occur
             tickDuration = 1.0 / settings["TicksPerSecond"]
+            duration = (time.time() - starttime)
             delay = tickDuration - (time.time() % tickDuration)
-            logging.debug("Current tick took {:4d} ms. Next tick delay: {:4d} ms".format(int((time.time() % tickDuration)*1000), int(delay*1000)))
+            if duration > tickDuration:
+                logging.warning("Current tick took {:d} ms, instead of intended maximum of {:d} ms. Next tick delay: {:d} ms".format(int(duration*1000), int(tickDuration*1000), int(delay*1000)))
+            else:
+                logging.debug("Current tick took {:d} ms. Next tick delay: {:d} ms".format(int(duration*1000), int(delay*1000)))
             time.sleep(delay)
             self.currentTick = self.currentTick + 1
 

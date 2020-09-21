@@ -160,8 +160,9 @@ class DataContainer():
 
         self.__nextID = 0
         self.__aggregatedValues = [] # Format is (id, timestamp, value)
-        self.__aggregationsPerTimeframe = {} # Dict of different time frames. each entry is an array of values (timestamp, value, numAggregations), where timestamp is the first timeunit in that frame
-        self.__indexNextValueToBeMergedIntoTimeframe = {} # Dict of different time frames. Each entry is an integer denoting the first position from __aggregatedValues that still needs to be merged into __aggregationsPerTimeframe
+        self.__aggregationsPerTimeframe = {} # Dict of different timeframes. each entry is an array of values [timestamp, value, numAggregations], where timestamp is the first timeunit in that frame
+        self.__currentAggregationsPerTimeframe = {}     #Dict of timeframes. contains a single aggregated value [timestamp, value, numAggregations], where value has not been averaged yet.
+                                                        #This is current set of measurements (which might overlap with the last time frame read from DB)
 
         self.__indexLastWrittenToFile = 0
 
@@ -173,7 +174,7 @@ class DataContainer():
 
         for [timeframeName, _ ] in self.__timeframes:
             self.__aggregationsPerTimeframe[timeframeName] = []
-            self.__indexNextValueToBeMergedIntoTimeframe[timeframeName] = -1
+            self.__currentAggregationsPerTimeframe[timeframeName] = []
 
         #Read previous values from DB
         pastValues = []
@@ -226,6 +227,11 @@ class DataContainer():
                     
                     prevTimeframe[timeframeName] = currentTimeframe
             
+            #Cut off last entry and move it into current aggregations
+            for [timeframeName, _] in self.__timeframes:
+                self.__currentAggregationsPerTimeframe[timeframeName] = self.__aggregationsPerTimeframe[timeframeName][-1]
+                self.__aggregationsPerTimeframe[timeframeName] = self.__aggregationsPerTimeframe[timeframeName][:-1]
+            
             #Compute averages for the timeframe values from above
             for [timeframeName, _] in self.__timeframes:
                 for i in range(0, len(self.__aggregationsPerTimeframe[timeframeName])):
@@ -249,53 +255,58 @@ class DataContainer():
         if len(self.__intermediateMeasurements) == settings["AggregationsPerDataPoint"]:
             average = sum(self.__intermediateMeasurements)
             average /= len(self.__intermediateMeasurements)
+            self.__intermediateMeasurements = []
 
             timestamp = self.__clock.getTimestamp()
             self.__aggregatedValues.append((self.__nextID, timestamp, average))
             self.__nextID += 1
-                
 
-            #Check whether intermediate aggregations can be combined into a new aggregated field
-            #TODO needs some handling for overlapping cases where a timeframe was already initialized with partial data
+
             for [timeframeName, timeframeDuration] in self.__timeframes:
-                lastTimeframe = -1
-                if len(self.__aggregationsPerTimeframe[timeframeName]) > 0:
-                    lastTimeframe = int(self.__aggregationsPerTimeframe[timeframeName][-1][0] // timeframeDuration)
-                currentTimeframe = int(timestamp // timeframeDuration)
+                timeframeNow = int(timestamp // timeframeDuration)
 
-                #Timeframe has advanced, so data values for new timeframe need to be updated
-                if currentTimeframe > lastTimeframe:
+                #Check whether there are any current measurements and add them if their respective timeframe has already concluded
+                if not self.__currentAggregationsPerTimeframe[timeframeName] == []:
+                    currentAggregationsTimeframe = int(self.__currentAggregationsPerTimeframe[timeframeName][0] // timeframeDuration)
 
-                    #First check whether time frame has moved more than one step and, if so, add some none values
-                    diff = currentTimeframe - lastTimeframe
-                    if lastTimeframe != -1 and diff > 1:
-                        for i in range(1, diff):
-                            self.__aggregationsPerTimeframe[timeframeName].append([int((lastTimeframe + i) * timeframeDuration), None, 0])
-
-                    #Special case: At the start of the measurements, the first aggregated value will be for currentTimeFrame. I.e., there are no previous values yet that can already be merged. So only merge if there are some previous values.
-                    if self.__indexNextValueToBeMergedIntoTimeframe[timeframeName] != -1:
-                        countToBeMerged = (len(self.__aggregatedValues) - 1) - self.__indexNextValueToBeMergedIntoTimeframe[timeframeName]
-                        mergedValues = 0
-                        for (_, _, value) in self.__aggregatedValues[(-1 - countToBeMerged):-1]:
-                            mergedValues += value
-                        mergedValues /= countToBeMerged
-                        self.__aggregationsPerTimeframe[timeframeName].append([int(currentTimeframe * timeframeDuration), mergedValues, countToBeMerged])
+                    if timeframeNow > currentAggregationsTimeframe:
+                        self.__aggregationsPerTimeframe[timeframeName].append(self.__currentAggregationsPerTimeframe[timeframeName])
+                        self.__aggregationsPerTimeframe[timeframeName][-1][1] /= self.__aggregationsPerTimeframe[timeframeName][-1][2] #compute average
+                        self.__currentAggregationsPerTimeframe[timeframeName] = []
                     
-                    self.__indexNextValueToBeMergedIntoTimeframe[timeframeName] = len(self.__aggregatedValues) - 1
+                #Check whether more than one timeframe unit has passed since last measurement. add suitably many None entries
+                #Note that, if more than one timeframe unit passes, then in particular current aggregations are empty
+                if self.__currentAggregationsPerTimeframe[timeframeName] == [] and len(self.__aggregationsPerTimeframe[timeframeName]) > 0:
+                    previousTimeframe = int(self.__aggregationsPerTimeframe[timeframeName][-1][0] // timeframeDuration)
+                    diff = timeframeNow - previousTimeframe
+                    for i in range(1, diff):
+                        self.__aggregationsPerTimeframe[timeframeName].append([int((previousTimeframe + i) * timeframeDuration), None, 0])
 
-            #Everything updated. Reset intermediate measurements
-            self.__intermediateMeasurements = []
+            
+                # Add intermediate aggregations to __currentAggregationsPerTimeframe
+                if self.__currentAggregationsPerTimeframe[timeframeName] == []:
+                    timeframeTimestamp = timeframeNow * timeframeDuration
+                    self.__currentAggregationsPerTimeframe[timeframeName] = [timeframeTimestamp, average, 1]
+                else:
+                    self.__currentAggregationsPerTimeframe[timeframeName][1] += average
+                    self.__currentAggregationsPerTimeframe[timeframeName][2] += 1
 
     
 
     def getRecentDataPoints(self, timeframeName, count, offset):
-        length = len(self.__aggregationsPerTimeframe[timeframeName])
-        return self.__aggregationsPerTimeframe[timeframeName][max(length - count - offset, 0) : max(length - offset, 0)]
+        data = self.__aggregationsPerTimeframe[timeframeName]
+        if not self.__currentAggregationsPerTimeframe[timeframeName] == []:
+            (timestamp, value, total) = self.__currentAggregationsPerTimeframe[timeframeName]
+            data = data + [[timestamp, value, total]]
+            data[-1][1] /= data[-1][2]
+        length = len(data)
+        return data[max(length - count - offset, 0) : max(length - offset, 0)]
 
     
 
     def getTotalNumberOfDataPoints(self, timeframeName):
-        return len(self.__aggregationsPerTimeframe[timeframeName])
+        lenCurrAggregations = 0 if self.__currentAggregationsPerTimeframe[timeframeName] == [] else 1
+        return len(self.__aggregationsPerTimeframe[timeframeName]) + lenCurrAggregations
     
 
 
