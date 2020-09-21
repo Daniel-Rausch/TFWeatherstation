@@ -69,5 +69,8 @@ settings = {
     "DBPath": "data",
     "DBFolderFormatstring": "db-{:d}",
 
+    #Data saving
+    "AutomaticSaveInterval": TICKS_PER_SECOND * 60 * 15, #negative or 0 to disable
+
     "LoggingLevel" : "INFO",
 }

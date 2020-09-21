@@ -119,6 +119,15 @@ class Datahandler():
 
         return self.__datacontainer[datatype].getTotalNumberOfDataPoints(timeframeType)
 
+    
+
+    def writeRecentDataToFile(self):
+        if not self.__initialized:
+            return
+            
+        for container in self.__datacontainer.values():
+            container.writeRecentDataToFile()
+
 
 
     def shutdown(self):
@@ -127,8 +136,7 @@ class Datahandler():
         if not self.__initialized:
             return
         
-        for container in self.__datacontainer.values():
-            container.writeRecentDataToFile()
+        self.writeRecentDataToFile()
 
 
 

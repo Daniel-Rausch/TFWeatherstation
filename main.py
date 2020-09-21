@@ -95,6 +95,11 @@ class Controller:
             #Update Screen
             self.currentScreen.update()
 
+            #Automatic data saving
+            if settings["AutomaticSaveInterval"] > 0 and (self.currentTick % settings["AutomaticSaveInterval"]) == 0 and not self.currentTick == 0:
+                logging.info("Autosaving data")
+                self.datahandler.writeRecentDataToFile()
+
             #Sleep until the next tick can occur
             tickDuration = 1.0 / settings["TicksPerSecond"]
             duration = (time.time() - starttime)
